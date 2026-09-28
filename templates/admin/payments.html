@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Payment Verification — Admin{% endblock %}
+{% block content %}
+<div class="container py-4 admin-page">
+  <div class="admin-page-header"><div><div class="section-eyebrow">Payment management</div><h2 class="mb-1">Payment Verification</h2><p class="text-muted mb-0">Review online payment references and verify or reject submissions.</p></div></div>
+
+  <div class="admin-section-heading"><h5>Pending Verification</h5><span class="status-pill status-pending">{{ pending|length }} pending</span></div>
+  {% if pending %}
+  <div class="admin-table-card mb-4"><div class="table-responsive"><table class="table admin-table align-middle mb-0">
+    <thead><tr><th>Order</th><th>Amount</th><th>Method</th><th>Reference</th><th>Date</th><th class="actions-col">Actions</th></tr></thead>
+    <tbody>{% for p in pending %}<tr>
+      <td><a href="{{ url_for('admin.order_detail', order_id=p.order_id) }}" class="fw-semibold">#{{ p.order_id }}</a></td>
+      <td class="text-nowrap">₱{{ '%.2f'|format(p.amount) }}</td><td>{{ p.payment_method }}</td><td>{{ p.reference_number or '—' }}</td><td class="text-nowrap">{{ p.created_at.strftime('%b %d, %Y') }}</td>
+      <td class="actions-cell"><form method="POST" action="{{ url_for('admin.payment_verify', payment_id=p.id) }}"><button class="btn btn-sm btn-success" type="submit">Verify</button></form><button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#reject-{{ p.id }}">Reject</button></td>
+    </tr>{% endfor %}</tbody>
+  </table></div></div>
+  {% else %}<div class="admin-empty-card mb-4">No payments are pending verification.</div>{% endif %}
+
+  <div class="admin-section-heading"><h5>Recent History</h5><span class="text-muted small">Latest 50 records</span></div>
+  <div class="admin-table-card"><div class="table-responsive"><table class="table admin-table align-middle mb-0">
+    <thead><tr><th>Order</th><th>Amount</th><th>Method</th><th>Status</th><th>Date</th></tr></thead>
+    <tbody>{% for p in others %}<tr><td><a href="{{ url_for('admin.order_detail', order_id=p.order_id) }}" class="fw-semibold">#{{ p.order_id }}</a></td><td class="text-nowrap">₱{{ '%.2f'|format(p.amount) }}</td><td>{{ p.payment_method }}</td><td><span class="status-pill">{{ p.payment_status.replace('_', ' ') }}</span></td><td class="text-nowrap">{{ p.created_at.strftime('%b %d, %Y') }}</td></tr>{% else %}<tr><td colspan="5" class="empty-table-state">No payment history yet.</td></tr>{% endfor %}</tbody>
+  </table></div></div>
+
+  {% for p in pending %}
+  <div class="modal fade" id="reject-{{ p.id }}" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog"><div class="modal-content"><form method="POST" action="{{ url_for('admin.payment_reject', payment_id=p.id) }}">
+      <div class="modal-header"><h5 class="modal-title">Reject Payment for Order #{{ p.order_id }}</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
+      <div class="modal-body"><label class="form-label" for="reason-{{ p.id }}">Rejection Reason</label><textarea id="reason-{{ p.id }}" name="rejection_reason" class="form-control" rows="3" required></textarea></div>
+      <div class="modal-footer"><button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button><button type="submit" class="btn btn-danger">Reject Payment</button></div>
+    </form></div></div>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

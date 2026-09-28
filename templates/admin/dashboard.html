@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Admin Dashboard — HairShellizer{% endblock %}
+{% block content %}
+<div class="container py-4 admin-page">
+  <div class="admin-page-header"><div><div class="section-eyebrow">Store control center</div><h2 class="mb-1">Admin Dashboard</h2><p class="text-muted mb-0">Monitor products, orders, payments, customers, and seller settings.</p></div></div>
+  <div class="row g-3 mb-4">
+    <div class="col-md-3 col-sm-6"><div class="card p-3 text-center"><h3>{{ total_orders }}</h3><p class="mb-0 text-muted">Total Orders</p></div></div>
+    <div class="col-md-3 col-sm-6"><div class="card p-3 text-center"><h3>{{ pending_orders }}</h3><p class="mb-0 text-muted">Pending Orders</p></div></div>
+    <div class="col-md-3 col-sm-6"><div class="card p-3 text-center"><h3>₱{{ '%.2f'|format(total_sales) }}</h3><p class="mb-0 text-muted">Total Sales</p></div></div>
+    <div class="col-md-3 col-sm-6"><div class="card p-3 text-center"><h3>{{ total_products }}</h3><p class="mb-0 text-muted">Products</p></div></div>
+    <div class="col-md-3 col-sm-6"><div class="card p-3 text-center"><h3>{{ low_stock }}</h3><p class="mb-0 text-muted">Low Stock</p></div></div>
+    <div class="col-md-3 col-sm-6"><div class="card p-3 text-center"><h3>{{ total_customers }}</h3><p class="mb-0 text-muted">Customers</p></div></div>
+    <div class="col-md-3 col-sm-6"><div class="card p-3 text-center"><h3>{{ pending_payments }}</h3><p class="mb-0 text-muted">Pending Payment Verification</p></div></div>
+    <div class="col-md-3 col-sm-6"><div class="card p-3 text-center"><h3>{{ active_inquiries }}</h3><p class="mb-0 text-muted">Active Inquiries</p></div></div>
+  </div>
+  <div class="d-flex flex-wrap gap-2">
+    <a href="{{ url_for('admin.products') }}" class="btn btn-outline-success">Manage Products</a>
+    <a href="{{ url_for('admin.categories') }}" class="btn btn-outline-success">Manage Categories</a>
+    <a href="{{ url_for('admin.orders') }}" class="btn btn-outline-success">Manage Orders</a>
+    <a href="{{ url_for('admin.payments') }}" class="btn btn-outline-success">Verify Payments</a>
+    <a href="{{ url_for('admin.chats') }}" class="btn btn-outline-success">View Chats ({{ order_chats }} order chats)</a>
+    <a href="{{ url_for('admin.customers') }}" class="btn btn-outline-success">Customers</a>
+    <a href="{{ url_for('admin.settings') }}" class="btn btn-outline-success">Seller Settings</a>
+  </div>
+</div>
+{% endblock %}

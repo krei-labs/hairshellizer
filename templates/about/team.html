@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Our Team — HairShellizer{% endblock %}
+
+{% macro member_card(m) %}
+<div class="card team-card h-100">
+  <div class="team-photo-frame">
+    <img src="/static/assets/{{ m.photo }}" alt="{{ m.name }}" loading="lazy">
+  </div>
+  <div class="card-body">
+    <h5 class="mb-1">{{ m.name }}</h5>
+    <p class="role-badge mb-2">{{ m.role }}</p>
+    <p class="small text-muted mb-0">{{ m.bio }}</p>
+  </div>
+</div>
+{% endmacro %}
+
+{% block content %}
+<div class="container section-block">
+  <div class="text-center mb-5 reveal">
+    <p class="section-eyebrow mb-1">The People Behind the Product</p>
+    <h2 class="section-title">Meet the Team</h2>
+    <div class="leaf-divider"></div>
+    <p class="text-muted mx-auto team-page-intro">Meet the people behind HairShellizer. Each member supports a specific part of the product, operations, sales, and customer experience while working toward the shared goal of turning biodegradable materials into a practical gardening product.</p>
+  </div>
+
+  <div class="team-chart">
+    <!-- Top tier: Partner-in-charge with Overall Operations -->
+    <div class="team-tier-top reveal">
+      {{ member_card(team[0]) }}
+    </div>
+
+    <!-- Connector lines (like an org chart) -->
+    <div class="team-connector"></div>
+    <div class="team-connector-bar"></div>
+
+    <!-- Bottom tier: the other four partners -->
+    <div class="row g-4 justify-content-center mt-1">
+      {% for m in team[1:] %}
+      <div class="col-lg-3 col-md-6 reveal reveal-delay-{{ loop.index0 % 4 }}">
+        {{ member_card(m) }}
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}

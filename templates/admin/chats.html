@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Chats — Admin{% endblock %}
+{% block content %}
+<div class="container py-4">
+  <h2 class="mb-4">Chats</h2>
+
+  <h5>Order Conversations</h5>
+  {% if order_chats %}
+  <div class="list-group mb-4">
+    {% for c in order_chats %}
+    <a href="{{ url_for('chat.view_conversation', conversation_id=c.id) }}" class="list-group-item list-group-item-action d-flex justify-content-between">
+      <span>Order #{{ c.order_id }} — {{ c.customer.name }}</span>
+      <span class="badge bg-success">{{ c.status }}</span>
+    </a>
+    {% endfor %}
+  </div>
+  {% else %}<p class="text-muted">No order conversations yet.</p>{% endif %}
+
+  <h5>Inquiries</h5>
+  {% if inquiries %}
+  <div class="list-group">
+    {% for c in inquiries %}
+    <a href="{{ url_for('chat.view_conversation', conversation_id=c.id) }}" class="list-group-item list-group-item-action d-flex justify-content-between">
+      <span>{{ c.customer.name }}</span>
+      <span class="badge bg-{{ 'info' if c.status == 'ACTIVE' else 'secondary' }}">{{ c.status }}</span>
+    </a>
+    {% endfor %}
+  </div>
+  {% else %}<p class="text-muted">No inquiries yet.</p>{% endif %}
+</div>
+{% endblock %}

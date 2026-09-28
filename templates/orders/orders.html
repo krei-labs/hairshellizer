@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}My Orders — HairShellizer{% endblock %}
+{% block content %}
+<div class="container py-4">
+  <h2 class="mb-4">My Orders</h2>
+  {% if orders %}
+  <div class="table-responsive">
+    <table class="table align-middle">
+      <thead><tr><th>Order #</th><th>Date</th><th>Total</th><th>Payment</th><th>Status</th><th></th></tr></thead>
+      <tbody>
+        {% for o in orders %}
+        <tr>
+          <td>#{{ o.id }}</td>
+          <td>{{ o.created_at.strftime('%b %d, %Y') }}</td>
+          <td>{{ o.formatted_total() }}</td>
+          <td>{{ o.payment_method }}</td>
+          <td><span class="badge bg-secondary">{{ o.status }}</span></td>
+          <td><a href="{{ url_for('orders.order_detail', order_id=o.id) }}" class="btn btn-sm btn-outline-success">View</a></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p class="text-center text-muted py-5">You have no orders yet. <a href="{{ url_for('shop.products') }}">Start Shopping</a></p>
+  {% endif %}
+</div>
+{% endblock %}

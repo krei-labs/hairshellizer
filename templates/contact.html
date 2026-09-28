@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}Contact — HairShellizer{% endblock %}
+{% block content %}
+<div class="container section-block page-section">
+  <div class="text-center mb-4 reveal">
+    <p class="section-eyebrow mb-1">We'd Love to Hear From You</p>
+    <h2 class="section-title">Contact HairShellizer</h2>
+    <div class="leaf-divider"></div>
+  </div>
+
+  <div class="row g-4 justify-content-center contact-grid">
+    <div class="col-md-6 col-lg-4 reveal">
+      <div class="benefit-card text-center">
+        <i class="bi bi-geo-alt fs-2 text-success"></i>
+        <h6 class="mt-2">Visit Us</h6>
+        <p class="small mb-0">Brgy. Poblacion 3, Avelino Street,<br>Tanauan City, Batangas</p>
+      </div>
+    </div>
+    <div class="col-md-6 col-lg-4 reveal reveal-delay-1">
+      <div class="benefit-card text-center">
+        <i class="bi bi-telephone fs-2 text-success"></i>
+        <h6 class="mt-2">Call Us</h6>
+        <p class="small mb-2">{{ seller_phone }}</p>
+        <a href="tel:{{ seller_phone }}" class="btn btn-outline-success btn-sm">Call</a>
+      </div>
+    </div>
+    <div class="col-md-6 col-lg-4 reveal reveal-delay-2">
+      <div class="benefit-card text-center">
+        <i class="bi bi-envelope fs-2 text-success"></i>
+        <h6 class="mt-2">Email Us</h6>
+        <p class="small mb-2">{{ seller_email }}</p>
+        <a href="mailto:{{ seller_email }}" class="btn btn-outline-success btn-sm">Email</a>
+      </div>
+    </div>
+    <div class="col-md-6 col-lg-4 reveal">
+      <div class="benefit-card text-center">
+        <i class="bi bi-facebook fs-2 text-success"></i>
+        <h6 class="mt-2">Facebook</h6>
+        <p class="small mb-2">HairShellizer</p>
+        <a href="{{ seller_facebook_url }}" target="_blank" rel="noopener" class="btn btn-outline-success btn-sm">Open Page</a>
+      </div>
+    </div>
+    <div class="col-md-6 col-lg-4 reveal reveal-delay-1">
+      <div class="benefit-card text-center">
+        <i class="bi bi-chat-dots fs-2 text-success"></i>
+        <h6 class="mt-2">Chat Seller</h6>
+        <p class="small mb-2">Ask about the product or your order.</p>
+        {% if current_user.is_authenticated %}
+        <form method="POST" action="{{ url_for('chat.start_inquiry') }}">
+          <button class="btn btn-success btn-sm" type="submit">Chat Seller</button>
+        </form>
+        {% else %}
+        <a href="{{ url_for('auth.login') }}" class="btn btn-success btn-sm">Login to Chat</a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

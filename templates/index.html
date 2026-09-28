@@ -1,0 +1,289 @@
+{% extends "base.html" %}
+{% block title %}HairShellizer — Where Shell Protects, Hair Grows{% endblock %}
+{% block content %}
+
+<section class="hero-section">
+  <div class="container position-relative">
+    <div class="row align-items-center g-5">
+      <div class="col-lg-6">
+        <span class="hero-badge mb-3">100% Locally Made in Tanauan City</span>
+        <h1 class="hero-title display-4 mt-3">HairShellizer</h1>
+        <p class="hero-slogan">"Where Shell Protects, Hair Grows"</p>
+        <p class="mb-3">250g Organic Powdered Fertilizer made from crushed eggshells and natural human hair —
+          a natural way to support healthy, thriving plants.</p>
+        <p class="hero-price mb-4">₱75.00 <span class="fs-6 fw-normal text-muted">/ 250g pack</span></p>
+        <div class="hero-actions mb-4">
+          <a href="{{ url_for('shop.products') }}" class="btn btn-success btn-lg">Shop HairShellizer</a>
+          <form method="POST" action="{{ url_for('chat.start_inquiry') }}">
+            <button class="btn btn-outline-success btn-lg" type="submit">Chat Seller</button>
+          </form>
+          <a href="{{ url_for('pages.about') }}" class="btn btn-link btn-lg text-decoration-none">Learn More →</a>
+        </div>
+        <div class="hero-trust-row mb-3">
+          <span><i class="bi bi-truck"></i> Cash on Delivery</span>
+          <span><i class="bi bi-shop"></i> Cash on Pickup</span>
+          <span><i class="bi bi-qr-code"></i> QR Payment</span>
+          <span><i class="bi bi-chat-dots"></i> Chat Support</span>
+        </div>
+        <div class="hero-mini-ingredients">
+          <div><i class="bi bi-egg-fried"></i> <div><strong>Crushed Eggshells</strong><span>Calcium &amp; trace minerals</span></div></div>
+          <div><i class="bi bi-droplet"></i> <div><strong>Natural Hair</strong><span>Nitrogen &amp; protein-rich</span></div></div>
+        </div>
+      </div>
+      <div class="col-lg-6">
+        <div class="hero-image-wrap">
+          <img src="/static/assets/branding/hairshellizer-promo-2.jpg" alt="HairShellizer 250g organic powdered fertilizer pack, ₱75.00 per pouch">
+          <div class="hero-chip"><i class="bi bi-patch-check-fill"></i> 100% Organic · Locally Made</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="hero-at-a-glance reveal">
+      <div class="row g-2 g-md-3 justify-content-center">
+        <div class="col-6 col-md-3">
+          <div class="quick-stat"><strong>250g</strong><span>per pack</span></div>
+        </div>
+        <div class="col-6 col-md-3">
+          <div class="quick-stat"><strong>₱75</strong><span>per pack</span></div>
+        </div>
+        <div class="col-6 col-md-3">
+          <div class="quick-stat"><strong>2 Materials</strong><span>eggshells + hair</span></div>
+        </div>
+        <div class="col-6 col-md-3">
+          <div class="quick-stat"><strong>Locally Made</strong><span>Tanauan City, Batangas</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="container section-block">
+  <div class="text-center mb-5 reveal">
+    <p class="section-eyebrow mb-1">Our Story</p>
+    <h2 class="section-title">About HairShellizer</h2>
+    <div class="leaf-divider"></div>
+  </div>
+  <div class="row align-items-center g-4">
+    <div class="col-md-5 reveal">
+      <div class="img-frame"><img src="/static/assets/products/hairshellizer-packaging.jpg" alt="HairShellizer packaging, front and back"></div>
+    </div>
+    <div class="col-md-7 reveal reveal-delay-1">
+      <p class="fs-5 text-justify">
+        "HairShellizer" derives its name from its two raw organic materials: natural hair and eggshells. By converting these biodegradable wastes into fertilizer rich in essential nutrients, HairShellizer provides a dual benefit: promoting plant vitality and reducing domestic waste. The product is specifically designed for decorative gardeners, providing an effective, natural, and durable solution for healthy plant growth.
+      </p>
+      <a href="{{ url_for('pages.about') }}" class="btn btn-outline-success">Read More</a>
+    </div>
+  </div>
+</section>
+
+<section class="section-block bg-brand-cream">
+  <div class="container">
+    <div class="text-center mb-5 reveal">
+      <p class="section-eyebrow mb-1">What's Inside</p>
+      <h2 class="section-title">Natural Ingredients</h2>
+      <div class="leaf-divider"></div>
+    </div>
+    <div class="row g-4">
+      <div class="col-md-6 reveal">
+        <div class="ingredient-card">
+          <h5><i class="bi bi-egg-fried text-success"></i> Crushed Eggshells</h5>
+          <p class="mb-0">A source of calcium and trace minerals that can help support soil structure.</p>
+        </div>
+      </div>
+      <div class="col-md-6 reveal reveal-delay-1">
+        <div class="ingredient-card">
+          <h5><i class="bi bi-droplet text-success"></i> Natural Human Hair</h5>
+          <p class="mb-0">An organic material rich in nitrogen and protein content, incorporated as a natural nutrient source.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="container section-block">
+  <div class="text-center mb-5 reveal">
+    <p class="section-eyebrow mb-1">Behind the Scenes</p>
+    <h2 class="section-title">From Waste to Growth</h2>
+    <div class="leaf-divider"></div>
+  </div>
+  <div class="img-frame reveal mb-4 p-3 p-md-4 bg-white">
+    <img src="/static/assets/other/waste-to-growth.svg" alt="Diagram: eggshells and natural hair are processed into HairShellizer powder, which feeds a growing plant">
+  </div>
+  <p class="text-center mb-4">Sun-drying → Cutting → Grinding → Heat Treating → Sieving → Proportioning → Mixing → Packaging</p>
+  <div class="text-center">
+    <a href="{{ url_for('pages.process') }}" class="btn btn-outline-success">See the Full Process</a>
+  </div>
+</section>
+
+<section class="section-block bg-brand-cream">
+  <div class="container">
+    <div class="text-center mb-5 reveal">
+      <p class="section-eyebrow mb-1">Our Promise</p>
+      <h2 class="section-title">Why Choose HairShellizer</h2>
+      <div class="leaf-divider"></div>
+    </div>
+    <div class="row g-4">
+      <div class="col-md-3 col-sm-6 reveal">
+        <div class="benefit-card h-100">
+          <i class="bi bi-flower2 fs-2 text-success"></i>
+          <h6 class="mt-2 mb-1">100% Organic</h6>
+          <p class="small mb-0">Made only from repurposed eggshells and natural hair — no synthetic fillers.</p>
+        </div>
+      </div>
+      <div class="col-md-3 col-sm-6 reveal reveal-delay-1">
+        <div class="benefit-card h-100">
+          <i class="bi bi-geo-alt fs-2 text-success"></i>
+          <h6 class="mt-2 mb-1">Locally Made</h6>
+          <p class="small mb-0">Produced and packed by hand in Tanauan City, Batangas.</p>
+        </div>
+      </div>
+      <div class="col-md-3 col-sm-6 reveal reveal-delay-2">
+        <div class="benefit-card h-100">
+          <i class="bi bi-tags fs-2 text-success"></i>
+          <h6 class="mt-2 mb-1">Affordable</h6>
+          <p class="small mb-0">Just ₱75.00 per 250g pack — a low-cost option for everyday gardening.</p>
+        </div>
+      </div>
+      <div class="col-md-3 col-sm-6 reveal reveal-delay-3">
+        <div class="benefit-card h-100">
+          <i class="bi bi-recycle fs-2 text-success"></i>
+          <h6 class="mt-2 mb-1">Waste-Reducing</h6>
+          <p class="small mb-0">Turns everyday biodegradable waste into something plants can use.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+{% if featured_products %}
+<section class="container section-block">
+  <div class="text-center mb-3 reveal">
+    <p class="section-eyebrow mb-1">Shop</p>
+    <h2 class="section-title">Featured Product</h2>
+    <div class="leaf-divider"></div>
+  </div>
+  <div class="row g-4 justify-content-center">
+    {% for p in featured_products %}
+    <div class="col-md-3 col-sm-6 reveal">
+      <div class="card product-card">
+        <div class="card-img-wrap"><img src="{{ p.image_url or 'https://placehold.co/400x300/f3ead9/4d6b38?text=HairShellizer' }}" alt="{{ p.name }}"></div>
+        <div class="card-body">
+          <h6>{{ p.name }}</h6>
+          <p class="fw-bold text-success mb-2">{{ p.formatted_price() }}</p>
+          <div class="d-grid gap-2">
+            <a href="{{ url_for('shop.product_detail', product_id=p.id) }}" class="btn btn-outline-success btn-sm">View Details</a>
+            {% if current_user.is_authenticated %}
+            <form method="POST" action="{{ url_for('cart.add_to_cart', product_id=p.id) }}">
+              <input type="hidden" name="quantity" value="1">
+              <button type="submit" class="btn btn-success btn-sm w-100" {% if not p.in_stock() %}disabled{% endif %}>Add to Cart</button>
+            </form>
+            {% else %}
+            <a href="{{ url_for('auth.login') }}" class="btn btn-success btn-sm">Login to Buy</a>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+<section class="container section-block home-audience-section">
+  <div class="text-center mb-3 reveal">
+    <p class="section-eyebrow mb-1">Perfect For</p>
+    <h2 class="section-title">Who Can Use It</h2>
+    <div class="leaf-divider"></div>
+  </div>
+  <div class="row g-3 text-center">
+    <div class="col-md-4 reveal">
+      <div class="benefit-card home-audience-card"><i class="bi bi-house-heart fs-2 text-success"></i><h6 class="mt-2 mb-1">Home Gardeners</h6><p class="small mb-0">For people caring for decorative plants at home and looking for a natural fertilizer option.</p></div>
+    </div>
+    <div class="col-md-4 reveal reveal-delay-1">
+      <div class="benefit-card home-audience-card"><i class="bi bi-flower3 fs-2 text-success"></i><h6 class="mt-2 mb-1">Plant Enthusiasts</h6><p class="small mb-0">For ornamental plant growers who want to incorporate a repurposed organic material into their gardening routine.</p></div>
+    </div>
+    <div class="col-md-4 reveal reveal-delay-2">
+      <div class="benefit-card home-audience-card"><i class="bi bi-shop fs-2 text-success"></i><h6 class="mt-2 mb-1">Nurseries & Garden Shops</h6><p class="small mb-0">For local plant businesses interested in offering an affordable, locally made gardening product.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="section-block bg-brand-cream">
+  <div class="container">
+    <div class="text-center mb-5 reveal">
+      <p class="section-eyebrow mb-1">Good to Know</p>
+      <h2 class="section-title">Frequently Asked Questions</h2>
+      <div class="leaf-divider"></div>
+    </div>
+    <div class="accordion reveal mx-auto" id="faqAccordion" style="max-width:800px;">
+      <div class="accordion-item">
+        <h2 class="accordion-header">
+          <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">
+            Is HairShellizer safe for all plants?
+          </button>
+        </h2>
+        <div id="faq1" class="accordion-collapse collapse show" data-bs-parent="#faqAccordion">
+          <div class="accordion-body">HairShellizer is designed for decorative and ornamental gardening. Always follow the
+          application guidance on the product label, and start with a small amount for a plant you haven't used it on before.</div>
+        </div>
+      </div>
+      <div class="accordion-item">
+        <h2 class="accordion-header">
+          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">
+            How do I pay for my order?
+          </button>
+        </h2>
+        <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+          <div class="accordion-body">We accept Cash on Delivery, Cash on Pickup, and Online Payment via our QR code
+          (manually verified once you send your reference number).</div>
+        </div>
+      </div>
+      <div class="accordion-item">
+        <h2 class="accordion-header">
+          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq3">
+            Where does HairShellizer ship or deliver to?
+          </button>
+        </h2>
+        <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+          <div class="accordion-body">We're based in Tanauan City, Batangas, with delivery and pickup available for
+          nearby areas. Chat with us to confirm delivery to your location.</div>
+        </div>
+      </div>
+      <div class="accordion-item">
+        <h2 class="accordion-header">
+          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq4">
+            Can I track my order or talk to the seller?
+          </button>
+        </h2>
+        <div id="faq4" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+          <div class="accordion-body">Yes — every order gets its own chat with the seller, and you can check your
+          order status any time from My Orders.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="container section-block text-center">
+  <p class="section-eyebrow mb-1">The People Behind HairShellizer</p>
+  <h2 class="section-title">Meet the Team</h2>
+  <div class="leaf-divider"></div>
+  <p>Five 4th-year BS Entrepreneurship students from Tanauan City College.</p>
+  <a href="{{ url_for('pages.team') }}" class="btn btn-outline-success">Meet the Team</a>
+</section>
+
+<section class="section-block bg-brand-cream text-center">
+  <div class="container">
+    <p class="section-eyebrow mb-1">Get In Touch</p>
+    <h2 class="section-title">Contact Us</h2>
+    <div class="leaf-divider"></div>
+    <p>Brgy. Poblacion 3, Avelino Street, Tanauan City, Batangas</p>
+    <div class="d-flex justify-content-center gap-2 flex-wrap">
+      <a href="tel:{{ seller_phone }}" class="btn btn-outline-success"><i class="bi bi-telephone"></i> Call</a>
+      <a href="mailto:{{ seller_email }}" class="btn btn-outline-success"><i class="bi bi-envelope"></i> Email</a>
+      <a href="{{ seller_facebook_url }}" target="_blank" class="btn btn-outline-success"><i class="bi bi-facebook"></i> Facebook</a>
+    </div>
+  </div>
+</section>
+
+{% endblock %}

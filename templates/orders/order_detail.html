@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}Order #{{ order.id }} — HairShellizer{% endblock %}
+{% block content %}
+<div class="container py-4">
+  <h2 class="mb-4">Order #{{ order.id }}</h2>
+  <div class="row g-4">
+    <div class="col-lg-7">
+      <div class="card mb-3">
+        <div class="card-body">
+          <h5>Items</h5>
+          <ul class="list-group list-group-flush">
+            {% for item in order.items %}
+            <li class="list-group-item d-flex justify-content-between">
+              <span>{{ item.product_name_snapshot }} × {{ item.quantity }}</span>
+              <span>₱{{ '%.2f'|format(item.subtotal) }}</span>
+            </li>
+            {% endfor %}
+          </ul>
+          <div class="d-flex justify-content-between fw-bold fs-5 mt-2">
+            <span>Total</span><span>{{ order.formatted_total() }}</span>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-body">
+          <h5>Delivery / Pickup</h5>
+          <p class="mb-1">{{ order.fulfillment_type|capitalize }}</p>
+          {% if order.shipping_address %}<p class="mb-1">{{ order.shipping_address }}</p>{% endif %}
+          <p class="mb-1">{{ order.full_name }} — {{ order.phone }}</p>
+          {% if order.notes %}<p class="text-muted small">Notes: {{ order.notes }}</p>{% endif %}
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-5">
+      <div class="card mb-3">
+        <div class="card-body">
+          <h5>Status</h5>
+          <p><span class="badge bg-secondary fs-6">{{ order.status }}</span></p>
+          <h6>Payment</h6>
+          <p class="mb-1">Method: {{ order.payment_method }}</p>
+          {% if order.payment %}
+          <p class="mb-1">Status:
+            {% if order.payment.payment_status == 'PAID' %}<span class="badge bg-success">PAID</span>
+            {% elif order.payment.payment_status == 'PENDING_VERIFICATION' %}<span class="badge bg-warning text-dark">Pending Verification</span>
+            {% elif order.payment.payment_status == 'REJECTED' %}<span class="badge bg-danger">Rejected</span>
+            {% else %}<span class="badge bg-secondary">{{ order.payment.payment_status }}</span>{% endif %}
+          </p>
+          {% if order.payment.reference_number %}<p class="small text-muted mb-1">Ref #: {{ order.payment.reference_number }}</p>{% endif %}
+          {% if order.payment.payment_status == 'REJECTED' and order.payment.rejection_reason %}
+          <div class="alert alert-danger small">Your payment was rejected. Reason: {{ order.payment.rejection_reason }}. Please chat with the seller.</div>
+          {% endif %}
+          {% endif %}
+          {% if order.conversation %}
+          <a href="{{ url_for('chat.view_conversation', conversation_id=order.conversation.id) }}" class="btn btn-success w-100 mt-2"><i class="bi bi-chat-dots"></i> Chat with Seller</a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

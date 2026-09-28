@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}Manage Products — Admin{% endblock %}
+{% block content %}
+<div class="container py-4 admin-page">
+  <div class="admin-page-header">
+    <div>
+      <div class="section-eyebrow">Catalog management</div>
+      <h2 class="mb-1">Products</h2>
+      <p class="text-muted mb-0">Manage product details, stock, visibility, and featured status.</p>
+    </div>
+    <a href="{{ url_for('admin.product_new') }}" class="btn btn-success"><i class="bi bi-plus-lg"></i> Add Product</a>
+  </div>
+
+  <div class="admin-table-card">
+    <div class="table-responsive">
+      <table class="table admin-table align-middle mb-0">
+        <thead>
+          <tr><th class="product-image-col">Image</th><th>Name</th><th>Category</th><th>Price</th><th>Stock</th><th>Featured</th><th>Status</th><th class="actions-col">Actions</th></tr>
+        </thead>
+        <tbody>
+        {% for p in products %}
+          <tr>
+            <td><img src="{{ p.image_url or 'https://placehold.co/64x64/f3ead9/4d6b38?text=HS' }}" class="admin-product-thumb" alt="{{ p.name }}"></td>
+            <td><div class="fw-semibold">{{ p.name }}</div><small class="text-muted">#{{ p.id }}</small></td>
+            <td>{{ p.category.name if p.category else '—' }}</td>
+            <td class="text-nowrap">{{ p.formatted_price() }}</td>
+            <td><span class="stock-value {% if p.stock <= 5 %}stock-low{% endif %}">{{ p.stock }}</span></td>
+            <td class="text-center">{% if p.is_featured %}<i class="bi bi-check-circle-fill text-success" title="Featured"></i>{% else %}<span class="text-muted">—</span>{% endif %}</td>
+            <td>
+              {% if p.is_active %}<span class="status-pill status-active">Active</span>
+              {% else %}<span class="status-pill status-inactive">Inactive</span>{% endif %}
+            </td>
+            <td class="actions-cell">
+              <a href="{{ url_for('admin.product_edit', product_id=p.id) }}" class="btn btn-sm btn-outline-success">Edit</a>
+              <form method="POST" action="{{ url_for('admin.product_toggle_status', product_id=p.id) }}">
+                {% if p.is_active %}
+                <button class="btn btn-sm btn-outline-danger" type="submit" onclick="return confirm('Deactivate this product? It will no longer appear in the shop.')">Deactivate</button>
+                {% else %}
+                <button class="btn btn-sm btn-success" type="submit">Activate</button>
+                {% endif %}
+              </form>
+            </td>
+          </tr>
+        {% else %}
+          <tr><td colspan="8" class="empty-table-state">No products have been added yet. Use <strong>Add Product</strong> to create the first one.</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}Seller Settings — Admin{% endblock %}
+{% block content %}
+<div class="container py-4" style="max-width:700px;">
+  <h2 class="mb-4">Seller Settings</h2>
+  <form method="POST" enctype="multipart/form-data">
+    <div class="mb-3">
+      <label class="form-label">Store Name</label>
+      <input type="text" name="store_name" class="form-control" value="{{ profile.store_name }}">
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Business Description</label>
+      <textarea name="description" class="form-control" rows="4">{{ profile.description }}</textarea>
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Address</label>
+      <input type="text" name="address" class="form-control" value="{{ profile.address }}">
+    </div>
+    <div class="row g-2">
+      <div class="col-md-6 mb-3">
+        <label class="form-label">Phone</label>
+        <input type="text" name="phone" class="form-control" value="{{ profile.phone }}">
+      </div>
+      <div class="col-md-6 mb-3">
+        <label class="form-label">Email</label>
+        <input type="email" name="email" class="form-control" value="{{ profile.email }}">
+      </div>
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Facebook URL</label>
+      <input type="text" name="facebook_url" class="form-control" value="{{ profile.facebook_url }}">
+    </div>
+    <div class="mb-4 qr-settings-card">
+      <label class="form-label fw-semibold">Payment QR Code</label>
+      <p class="small text-muted mb-3">Upload the current payment QR used by buyers for online payments. Uploading a new image replaces the QR configured for checkout.</p>
+      {% if profile.qr_image_url %}
+        <div class="qr-preview-panel mb-3">
+          <div class="qr-preview-label">Current QR Code</div>
+          <img src="{{ profile.qr_image_url }}" alt="Current seller payment QR code" class="qr-preview-image">
+          <div class="d-flex flex-wrap gap-2 mt-3">
+            <a href="{{ profile.qr_image_url }}" target="_blank" rel="noopener" class="btn btn-sm btn-outline-success">Open QR</a>
+            <form method="POST" action="{{ url_for('admin.delete_qr') }}" class="d-inline">
+              <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Remove the current payment QR? Buyers will no longer see it for online payment until a new QR is uploaded.')">Delete Current QR</button>
+            </form>
+          </div>
+        </div>
+      {% else %}
+        <div class="qr-empty-state mb-3">
+          <i class="bi bi-qr-code fs-2"></i>
+          <span>No payment QR is currently configured.</span>
+        </div>
+      {% endif %}
+      <input type="file" name="qr_image" class="form-control" accept=".jpg,.jpeg,.png,.webp">
+      <div class="form-text">JPG, JPEG, PNG, or WEBP · maximum 5 MB.</div>
+    </div>
+    <button type="submit" class="btn btn-success">Save Settings</button>
+  </form>
+</div>
+{% endblock %}

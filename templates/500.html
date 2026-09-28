@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}Server Error — HairShellizer{% endblock %}
+{% block content %}
+<div class="container py-5 text-center">
+  <h1 class="display-1 text-danger">500</h1>
+  <p class="lead">Something went wrong on our end. Please try again shortly.</p>
+  <a href="{{ url_for('pages.home') }}" class="btn btn-success">Back to Home</a>
+</div>
+{% endblock %}

@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 300" role="img" aria-labelledby="t d">
+  <title id="t">From waste to growth</title>
+  <desc id="d">Illustration: eggshells and hair become HairShellizer powder that feeds a growing plant.</desc>
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#faf6ee"/><stop offset="1" stop-color="#f3ead9"/></linearGradient>
+  </defs>
+  <rect width="900" height="300" rx="24" fill="url(#sky)"/>
+  <!-- Eggshell -->
+  <g transform="translate(110,150)">
+    <path d="M-52 10 C-52 -50 -20 -78 0 -78 C20 -78 52 -50 52 10 L38 4 L26 14 L12 2 L0 14 L-12 2 L-26 14 L-38 4 Z" fill="#fff" stroke="#c9b48f" stroke-width="3"/>
+    <path d="M-40 16 C-40 50 -18 68 0 68 C18 68 40 50 40 16 L28 22 L14 10 L0 22 L-14 10 L-28 22 Z" fill="#f4ecdc" stroke="#c9b48f" stroke-width="3"/>
+    <text y="105" text-anchor="middle" font-family="Poppins,Arial,sans-serif" font-size="16" font-weight="600" fill="#4a2a13">Eggshells</text>
+    <text y="125" text-anchor="middle" font-family="Poppins,Arial,sans-serif" font-size="12" fill="#8a6b4f">calcium &amp; trace minerals</text>
+  </g>
+  <text x="200" y="158" font-family="Poppins,Arial,sans-serif" font-size="38" font-weight="700" fill="#4d6b38">+</text>
+  <!-- Hair -->
+  <g transform="translate(300,150)">
+    <path d="M-40 -60 C-10 -70 10 -40 -10 -20 C-30 0 20 10 0 40 C-10 55 -30 50 -40 60" fill="none" stroke="#4a2a13" stroke-width="5" stroke-linecap="round"/>
+    <path d="M-15 -66 C15 -70 30 -40 12 -18 C-6 4 38 12 22 44" fill="none" stroke="#6b4426" stroke-width="5" stroke-linecap="round"/>
+    <path d="M10 -62 C36 -60 48 -34 34 -14 C22 4 52 14 44 40" fill="none" stroke="#4a2a13" stroke-width="5" stroke-linecap="round"/>
+    <text y="105" text-anchor="middle" font-family="Poppins,Arial,sans-serif" font-size="16" font-weight="600" fill="#4a2a13">Natural Hair</text>
+    <text y="125" text-anchor="middle" font-family="Poppins,Arial,sans-serif" font-size="12" fill="#8a6b4f">nitrogen / protein-rich</text>
+  </g>
+  <!-- Arrow -->
+  <path d="M385 150 H455" stroke="#4d6b38" stroke-width="5" stroke-linecap="round"/>
+  <path d="M445 138 L460 150 L445 162" fill="none" stroke="#4d6b38" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Pouch -->
+  <g transform="translate(560,150)">
+    <path d="M-48 -78 H48 L56 -60 V80 Q56 92 44 92 H-44 Q-56 92 -56 80 V-60 Z" fill="#c9a06a" stroke="#a37d47" stroke-width="3"/>
+    <rect x="-48" y="-78" width="96" height="14" fill="#b58d57"/>
+    <circle cx="0" cy="0" r="32" fill="#fff" stroke="#4d6b38" stroke-width="5"/>
+    <path d="M0 18 V-14 M0 -2 C-14 -4 -18 -14 -18 -20 C-8 -20 0 -14 0 -2 M0 -8 C12 -10 16 -20 16 -26 C6 -26 0 -20 0 -8" fill="none" stroke="#4d6b38" stroke-width="3.5" stroke-linecap="round"/>
+    <text y="125" text-anchor="middle" font-family="Poppins,Arial,sans-serif" font-size="16" font-weight="600" fill="#4a2a13">HairShellizer</text>
+    <text y="145" text-anchor="middle" font-family="Poppins,Arial,sans-serif" font-size="12" fill="#8a6b4f">250g = 200g shell + 50g hair</text>
+  </g>
+  <path d="M640 150 H710" stroke="#4d6b38" stroke-width="5" stroke-linecap="round"/>
+  <path d="M700 138 L715 150 L700 162" fill="none" stroke="#4d6b38" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Plant in soil -->
+  <g transform="translate(800,150)">
+    <path d="M-60 60 Q0 40 60 60 V80 Q0 100 -60 80 Z" fill="#6b4426"/>
+    <path d="M-60 60 Q0 40 60 60" fill="none" stroke="#4a2a13" stroke-width="3"/>
+    <path d="M0 52 V-40" stroke="#4d6b38" stroke-width="6" stroke-linecap="round"/>
+    <path d="M0 0 C-40 -6 -50 -40 -46 -52 C-16 -50 0 -30 0 0Z" fill="#7c9a5e"/>
+    <path d="M0 -20 C38 -26 50 -58 46 -70 C16 -68 0 -48 0 -20Z" fill="#4d6b38"/>
+    <path d="M0 -40 C-14 -56 -8 -78 0 -88 C10 -78 14 -56 0 -40Z" fill="#7c9a5e"/>
+    <text y="125" text-anchor="middle" font-family="Poppins,Arial,sans-serif" font-size="16" font-weight="600" fill="#4a2a13">Healthy Plants</text>
+    <text y="145" text-anchor="middle" font-family="Poppins,Arial,sans-serif" font-size="12" fill="#8a6b4f">supports plant vitality</text>
+  </g>
+</svg>

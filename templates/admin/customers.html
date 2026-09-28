@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block title %}Customers — Admin{% endblock %}
+{% block content %}
+<div class="container py-4 admin-page">
+  <div class="admin-page-header"><div><div class="section-eyebrow">Customer management</div><h2 class="mb-1">Customers</h2><p class="text-muted mb-0">View registered buyer contact information.</p></div></div>
+  <div class="admin-table-card"><div class="table-responsive"><table class="table admin-table align-middle mb-0">
+    <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Joined</th></tr></thead>
+    <tbody>{% for c in customers %}<tr><td class="fw-semibold">{{ c.name }}</td><td>{{ c.email }}</td><td>{{ c.phone or '—' }}</td><td class="text-nowrap">{{ c.created_at.strftime('%b %d, %Y') }}</td></tr>{% else %}<tr><td colspan="4" class="empty-table-state">No customer accounts yet.</td></tr>{% endfor %}</tbody>
+  </table></div></div>
+</div>
+{% endblock %}

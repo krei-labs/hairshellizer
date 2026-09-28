@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}HairShellizer — Where Shell Protects, Hair Grows{% endblock %}</title>
+<meta name="description" content="{% block description %}HairShellizer: a 250g organic powdered fertilizer made from crushed eggshells and natural hair, based in Tanauan City, Batangas.{% endblock %}">
+
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌱</text></svg>">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Lora:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+<link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+{% block extra_head %}{% endblock %}
+</head>
+<body class="d-flex flex-column min-vh-100">
+
+<nav class="navbar navbar-expand-xl navbar-light bg-white shadow-sm sticky-top" id="mainNav">
+  <div class="container">
+    <a class="navbar-brand" href="{{ url_for('pages.home') }}">
+      <img src="/static/assets/logo/hairshellizer-logo.png" alt="HairShellizer logo">
+      HairShellizer
+    </a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMain" aria-controls="navMain" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navMain">
+      <ul class="navbar-nav primary-nav me-auto mb-2 mb-xl-0">
+        <li class="nav-item"><a class="nav-link" href="{{ url_for('pages.home') }}">Home</a></li>
+        <li class="nav-item"><a class="nav-link" href="{{ url_for('shop.products') }}">Shop</a></li>
+        <li class="nav-item"><a class="nav-link" href="{{ url_for('pages.about') }}">About</a></li>
+        <li class="nav-item"><a class="nav-link" href="{{ url_for('pages.sustainability') }}">Sustainability</a></li>
+        <li class="nav-item"><a class="nav-link" href="{{ url_for('pages.process') }}">How It's Made</a></li>
+        <li class="nav-item"><a class="nav-link" href="{{ url_for('pages.team') }}">Our Team</a></li>
+        <li class="nav-item"><a class="nav-link" href="{{ url_for('pages.contact') }}">Contact</a></li>
+      </ul>
+      <ul class="navbar-nav utility-nav align-items-xl-center gap-xl-1">
+        {% if current_user.is_authenticated %}
+          <li class="nav-item"><a class="nav-link" href="{{ url_for('cart.view_cart') }}"><i class="bi bi-cart3"></i> Cart</a></li>
+          <li class="nav-item"><a class="nav-link" href="{{ url_for('orders.my_orders') }}"><i class="bi bi-box-seam"></i> My Orders</a></li>
+          <li class="nav-item"><a class="nav-link" href="{{ url_for('chat.conversations') }}"><i class="bi bi-chat-dots"></i> Chats</a></li>
+          {% if current_user.is_admin %}
+          <li class="nav-item"><a class="nav-link fw-semibold text-success" href="{{ url_for('admin.dashboard') }}"><i class="bi bi-speedometer2"></i> Admin</a></li>
+          {% endif %}
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
+              <i class="bi bi-person-circle"></i> {{ current_user.name.split(' ')[0] }}
+            </a>
+            <ul class="dropdown-menu dropdown-menu-end">
+              <li><a class="dropdown-item" href="{{ url_for('auth.logout') }}">Logout</a></li>
+            </ul>
+          </li>
+        {% else %}
+          <li class="nav-item"><a class="nav-link" href="{{ url_for('auth.login') }}">Login</a></li>
+          <li class="nav-item"><a class="btn btn-success btn-sm ms-lg-2" href="{{ url_for('auth.register') }}">Register</a></li>
+        {% endif %}
+      </ul>
+    </div>
+  </div>
+</nav>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+  <div class="container flash-container">
+    {% for category, message in messages %}
+      <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+{% endwith %}
+
+<main class="flex-grow-1">
+{% block content %}{% endblock %}
+</main>
+
+<footer class="site-footer pt-4 pb-2 mt-auto">
+  <div class="container">
+    <div class="row gy-3 gx-4 align-items-start">
+      <div class="col-md-5">
+        <h6 class="d-flex align-items-center gap-2 mb-2">
+          <img src="/static/assets/logo/hairshellizer-logo.png" alt="HairShellizer logo" height="24">
+          HairShellizer
+        </h6>
+        <p class="small mb-1 fst-italic">"Where Shell Protects, Hair Grows"</p>
+        <p class="small mb-0">Brgy. Poblacion 3, Avelino Street, Tanauan City, Batangas</p>
+        <p class="small mb-0">{{ seller_phone }} ·
+          <a class="text-light text-decoration-none" href="mailto:{{ seller_email }}">{{ seller_email }}</a>
+          · <a class="text-light" href="{{ seller_facebook_url }}" target="_blank" rel="noopener"><i class="bi bi-facebook"></i></a>
+        </p>
+      </div>
+      <div class="col-6 col-md-3">
+        <h6 class="text-uppercase small mb-2">Quick Links</h6>
+        <ul class="list-unstyled small mb-0">
+          <li><a class="text-light text-decoration-none" href="{{ url_for('pages.home') }}">Home</a></li>
+          <li><a class="text-light text-decoration-none" href="{{ url_for('shop.products') }}">Shop</a></li>
+          <li><a class="text-light text-decoration-none" href="{{ url_for('pages.about') }}">About</a></li>
+          <li><a class="text-light text-decoration-none" href="{{ url_for('pages.team') }}">Our Team</a></li>
+          <li><a class="text-light text-decoration-none" href="{{ url_for('pages.contact') }}">Contact</a></li>
+        </ul>
+      </div>
+      <div class="col-6 col-md-4">
+        <h6 class="text-uppercase small mb-2">Legal</h6>
+        <ul class="list-unstyled small mb-0">
+          <li><a class="text-light text-decoration-none" href="{{ url_for('pages.privacy') }}">Privacy Policy</a></li>
+          <li><a class="text-light text-decoration-none" href="{{ url_for('pages.terms') }}">Terms and Conditions</a></li>
+        </ul>
+      </div>
+    </div>
+    <hr class="border-secondary my-2">
+    <p class="small text-center mb-0">&copy; {{ 2026 }} HairShellizer. All rights reserved.</p>
+  </div>
+</footer>
+
+<button id="backToTop" class="back-to-top" aria-label="Back to top"><i class="bi bi-arrow-up"></i></button>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/js/bootstrap.bundle.min.js"></script>
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+{% block extra_scripts %}{% endblock %}
+</body>
+</html>

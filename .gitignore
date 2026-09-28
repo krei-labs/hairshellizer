@@ -1,0 +1,12 @@
+.env
+__pycache__/
+*.pyc
+.venv/
+venv/
+instance/
+.DS_Store
+.vscode/
+.idea/
+node_modules/
+*.db
+migrations/versions/*.pyc

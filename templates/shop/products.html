@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}Shop — HairShellizer{% endblock %}
+{% block content %}
+<div class="bg-brand-cream py-4 mb-4">
+  <div class="container text-center">
+    <p class="section-eyebrow mb-1">Shop</p>
+    <h2 class="section-title mb-0">HairShellizer Products</h2>
+  </div>
+</div>
+<div class="container pb-5">
+
+  <form method="GET" class="row g-2 mb-4">
+    <div class="col-md-6">
+      <input type="text" name="q" value="{{ search }}" class="form-control" placeholder="Search products...">
+    </div>
+    <div class="col-md-4">
+      <select name="category" class="form-select">
+        <option value="">All Categories</option>
+        {% for c in categories %}
+        <option value="{{ c.id }}" {% if selected_category == c.id %}selected{% endif %}>{{ c.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-2">
+      <button type="submit" class="btn btn-success w-100">Filter</button>
+    </div>
+  </form>
+
+  {% if products %}
+  <div class="row g-4">
+    {% for p in products %}
+    <div class="col-lg-3 col-md-4 col-sm-6">
+      <div class="card product-card">
+        <img src="{{ p.image_url or 'https://placehold.co/400x300/f3ead9/4d6b38?text=HairShellizer' }}" alt="{{ p.name }}">
+        <div class="card-body d-flex flex-column">
+          <h6>{{ p.name }}</h6>
+          <p class="fw-bold text-success mb-1">{{ p.formatted_price() }}</p>
+          <p class="small mb-2">
+            {% if p.in_stock() %}<span class="text-success">In Stock ({{ p.stock }})</span>
+            {% else %}<span class="text-danger">Out of Stock</span>{% endif %}
+          </p>
+          <div class="mt-auto d-grid gap-2">
+            <a href="{{ url_for('shop.product_detail', product_id=p.id) }}" class="btn btn-outline-success btn-sm">View Details</a>
+            {% if current_user.is_authenticated %}
+            <form method="POST" action="{{ url_for('cart.add_to_cart', product_id=p.id) }}">
+              <input type="hidden" name="quantity" value="1">
+              <button type="submit" class="btn btn-success btn-sm w-100" {% if not p.in_stock() %}disabled{% endif %}>Add to Cart</button>
+            </form>
+            {% else %}
+            <a href="{{ url_for('auth.login') }}" class="btn btn-success btn-sm">Login to Buy</a>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  {% if pagination.pages > 1 %}
+  <nav class="mt-4">
+    <ul class="pagination justify-content-center">
+      {% for page_num in pagination.iter_pages() %}
+        {% if page_num %}
+          <li class="page-item {% if page_num == pagination.page %}active{% endif %}">
+            <a class="page-link" href="{{ url_for('shop.products', page=page_num, q=search, category=selected_category) }}">{{ page_num }}</a>
+          </li>
+        {% else %}
+          <li class="page-item disabled"><span class="page-link">…</span></li>
+        {% endif %}
+      {% endfor %}
+    </ul>
+  </nav>
+  {% endif %}
+
+  {% else %}
+  <p class="text-center text-muted py-5">No products found.</p>
+  {% endif %}
+</div>
+{% endblock %}

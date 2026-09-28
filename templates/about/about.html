@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block title %}About — HairShellizer{% endblock %}
+{% block content %}
+<div class="container section-block pb-2">
+  <div class="text-center mb-4 reveal">
+    <p class="section-eyebrow mb-1">Our Story</p>
+    <h2 class="section-title">About HairShellizer</h2>
+    <div class="leaf-divider"></div>
+  </div>
+  <div class="about-copy mx-auto text-center">
+  <p class="fs-5 mb-4 text-justify">
+    "HairShellizer" derives its name from its two raw organic materials: natural hair and eggshells. By converting these biodegradable wastes into fertilizer rich in essential nutrients, HairShellizer provides a dual benefit: promoting plant vitality and reducing domestic waste. The product is specifically designed for decorative gardeners, providing an effective, natural, and durable solution for healthy plant growth.
+  </p>
+  <div class="text-center">
+    <a href="{{ url_for('shop.products') }}" class="btn btn-success">Shop HairShellizer</a>
+  </div>
+</div>
+<div class="container pb-5">
+  <div class="text-center mt-5 mb-1"><p class="section-eyebrow mb-1">Why It Works</p><h3 class="section-title">Uses &amp; Benefits</h3><div class="leaf-divider"></div></div>
+  <div class="row g-4 mt-1 about-benefit-grid">
+    <div class="col-md-6">
+      <div class="ingredient-card">
+        <h6>Soil Improvement</h6>
+        <p class="small mb-0">HairShellizer supports soil improvement by contributing organic material that can help support soil structure, aeration, and moisture balance.</p>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="ingredient-card">
+        <h6>Supporting the Soil Ecosystem</h6>
+        <p class="small mb-0">Its organic materials can contribute to a healthy soil environment and support beneficial soil organisms.</p>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="ingredient-card">
+        <h6>Nutrient Supply</h6>
+        <p class="small mb-0">HairShellizer provides nutrients from eggshell minerals and natural hair-derived material that can contribute to plant growth.</p>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="ingredient-card">
+        <h6>Nutrient Breadth</h6>
+        <p class="small mb-0">Its combination of eggshell-derived minerals and hair-derived nutrients provides a natural nutrient source for plants.</p>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="ingredient-card">
+        <h6>Environmental Impact</h6>
+        <p class="small mb-0">HairShellizer repurposes biodegradable waste materials such as eggshells and natural hair, supporting waste reduction and environmentally conscious gardening practices.</p>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="ingredient-card">
+        <h6>Economic Value</h6>
+        <p class="small mb-0">HairShellizer provides a low-cost fertilizer option for home gardeners and plant enthusiasts.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="text-center mt-5 mb-3"><p class="section-eyebrow mb-1">Our Customers</p><h3 class="section-title">Who Is It For?</h3><div class="leaf-divider"></div></div>
+  <div class="row g-3 justify-content-center mb-2">
+    <div class="col-md-6 col-lg-4">
+      <div class="benefit-card h-100 text-start"><i class="bi bi-house-heart text-success"></i> Home gardeners looking for a natural fertilizer option</div>
+    </div>
+    <div class="col-md-6 col-lg-4">
+      <div class="benefit-card h-100 text-start"><i class="bi bi-flower3 text-success"></i> Ornamental plant enthusiasts who want to support healthy plant growth</div>
+    </div>
+    <div class="col-md-6 col-lg-4">
+      <div class="benefit-card h-100 text-start"><i class="bi bi-shop text-success"></i> Plant nursery shops seeking a low-cost supply option</div>
+    </div>
+    <div class="col-md-6 col-lg-4">
+      <div class="benefit-card h-100 text-start"><i class="bi bi-flower1 text-success"></i> Garden shops interested in eco-friendly products</div>
+    </div>
+    <div class="col-md-6 col-lg-4">
+      <div class="benefit-card h-100 text-start"><i class="bi bi-recycle text-success"></i> Eco-conscious consumers who value waste-reducing products</div>
+    </div>
+  </div>
+
+  <p class="text-muted small mt-4">
+    For application and handling guidelines, please contact the HairShellizer seller directly. The seller can provide the appropriate instructions for the product supplied.
+  </p>
+</div>
+{% endblock %}

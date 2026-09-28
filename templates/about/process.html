@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}How It's Made — HairShellizer{% endblock %}
+{% block content %}
+<div class="container py-5">
+  <div class="text-center mb-4">
+    <p class="section-eyebrow mb-1">From Waste to Wonder</p>
+    <h2 class="section-title">How HairShellizer Is Made</h2>
+    <div class="leaf-divider"></div>
+  </div>
+  <div class="row g-3">
+    {% for step in steps %}
+    <div class="col-md-3 col-sm-6">
+      <div class="process-step">
+        <div class="step-num">{{ loop.index }}</div>
+        <p class="mb-0">{{ step }}</p>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <div class="text-center mt-5">
+    <h5 class="section-title">Final Formulation</h5>
+    <p>200g eggshell powder + 50g hair powder = 250g HairShellizer pack</p>
+  </div>
+
+  <div class="row text-center mt-5 g-3">
+    <div class="col-md-4"><div class="benefit-card"><h3 class="text-success mb-0">8</h3><p class="mb-0">units / day</p></div></div>
+    <div class="col-md-4"><div class="benefit-card"><h3 class="text-success mb-0">40</h3><p class="mb-0">units / week</p></div></div>
+    <div class="col-md-4"><div class="benefit-card"><h3 class="text-success mb-0">160</h3><p class="mb-0">units / month</p></div></div>
+  </div>
+  <p class="text-center text-muted small mt-3">Based on a 4-hour production shift.</p>
+</div>
+{% endblock %}

@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Your Cart — HairShellizer{% endblock %}
+{% block content %}
+<div class="container py-4">
+  <h2 class="mb-4">Your Cart</h2>
+  {% if items %}
+  <div class="table-responsive">
+    <table class="table align-middle">
+      <thead><tr><th>Product</th><th>Price</th><th>Quantity</th><th>Subtotal</th><th></th></tr></thead>
+      <tbody>
+        {% for item in items %}
+        <tr>
+          <td class="d-flex align-items-center gap-2">
+            <img src="{{ item.product.image_url or 'https://placehold.co/60x60/f3ead9/4d6b38?text=HS' }}" width="50" height="50" style="object-fit:cover;border-radius:6px;" alt="{{ item.product.name }}">
+            {{ item.product.name }}
+          </td>
+          <td>{{ item.product.formatted_price() }}</td>
+          <td class="cart-quantity-cell">
+            <form method="POST" action="{{ url_for('cart.update_cart', item_id=item.id) }}" class="d-flex gap-1">
+              <input type="number" name="quantity" value="{{ item.quantity }}" min="0" max="{{ item.product.stock }}" class="form-control form-control-sm cart-quantity-input">
+              <button class="btn btn-sm btn-outline-success cart-update-btn" type="submit">Update</button>
+            </form>
+          </td>
+          <td>₱{{ '%.2f'|format(item.subtotal()) }}</td>
+          <td>
+            <form method="POST" action="{{ url_for('cart.remove_from_cart', item_id=item.id) }}">
+              <button class="btn btn-sm btn-outline-danger" type="submit"><i class="bi bi-trash"></i></button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div class="d-flex justify-content-end align-items-center gap-3 mt-3">
+    <h4>Total: ₱{{ '%.2f'|format(total) }}</h4>
+    <a href="{{ url_for('checkout.checkout') }}" class="btn btn-success btn-lg">Checkout</a>
+  </div>
+  {% else %}
+  <p class="text-center text-muted py-5">Your cart is empty. <a href="{{ url_for('shop.products') }}">Continue Shopping</a></p>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}Order #{{ order.id }} — Admin{% endblock %}
+{% block content %}
+<div class="container py-4">
+  <h2 class="mb-4">Order #{{ order.id }}</h2>
+  <div class="row g-4">
+    <div class="col-lg-7">
+      <div class="card mb-3">
+        <div class="card-body">
+          <h5>Items</h5>
+          <ul class="list-group list-group-flush">
+            {% for item in order.items %}
+            <li class="list-group-item d-flex justify-content-between">
+              <span>{{ item.product_name_snapshot }} × {{ item.quantity }}</span>
+              <span>₱{{ '%.2f'|format(item.subtotal) }}</span>
+            </li>
+            {% endfor %}
+          </ul>
+          <div class="d-flex justify-content-between fw-bold fs-5 mt-2">
+            <span>Total</span><span>{{ order.formatted_total() }}</span>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-body">
+          <h5>Customer</h5>
+          <p class="mb-1">{{ order.full_name }} ({{ order.email }})</p>
+          <p class="mb-1">{{ order.phone }}</p>
+          <p class="mb-1">{{ order.fulfillment_type|capitalize }}{% if order.shipping_address %} — {{ order.shipping_address }}{% endif %}</p>
+          {% if order.notes %}<p class="text-muted small">Notes: {{ order.notes }}</p>{% endif %}
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-5">
+      <div class="card mb-3">
+        <div class="card-body">
+          <h5>Order Status</h5>
+          <form method="POST" action="{{ url_for('admin.order_update_status', order_id=order.id) }}" class="d-flex gap-2">
+            <select name="status" class="form-select">
+              {% for s in statuses %}
+              <option value="{{ s }}" {% if order.status == s %}selected{% endif %}>{{ s }}</option>
+              {% endfor %}
+            </select>
+            <button class="btn btn-success" type="submit">Update</button>
+          </form>
+        </div>
+      </div>
+      <div class="card mb-3">
+        <div class="card-body">
+          <h5>Payment</h5>
+          {% if order.payment %}
+          <p class="mb-1">Method: {{ order.payment.payment_method }}</p>
+          <p class="mb-1">Status: <span class="badge bg-secondary">{{ order.payment.payment_status }}</span></p>
+          {% if order.payment.reference_number %}<p class="mb-1">Ref #: {{ order.payment.reference_number }}</p>{% endif %}
+          <a href="{{ url_for('admin.payments') }}" class="btn btn-sm btn-outline-success">Go to Payment Verification</a>
+          {% else %}
+          <p class="text-muted">No payment record.</p>
+          {% endif %}
+        </div>
+      </div>
+      {% if order.conversation %}
+      <a href="{{ url_for('chat.view_conversation', conversation_id=order.conversation.id) }}" class="btn btn-outline-success w-100"><i class="bi bi-chat-dots"></i> Open Order Chat</a>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

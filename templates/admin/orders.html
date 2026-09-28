@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Manage Orders — Admin{% endblock %}
+{% block content %}
+<div class="container py-4 admin-page">
+  <div class="admin-page-header">
+    <div><div class="section-eyebrow">Sales management</div><h2 class="mb-1">Orders</h2><p class="text-muted mb-0">Review customer orders and update their fulfillment status.</p></div>
+    <form method="GET" class="admin-filter-form">
+      <label class="visually-hidden" for="status-filter">Filter by status</label>
+      <select id="status-filter" name="status" class="form-select" onchange="this.form.submit()">
+        <option value="">All Statuses</option>
+        {% for s in statuses %}<option value="{{ s }}" {% if status_filter == s %}selected{% endif %}>{{ s }}</option>{% endfor %}
+      </select>
+    </form>
+  </div>
+  <div class="admin-table-card">
+    <div class="table-responsive">
+      <table class="table admin-table align-middle mb-0">
+        <thead><tr><th>Order</th><th>Customer</th><th>Date</th><th>Total</th><th>Payment</th><th>Status</th><th class="actions-col">Action</th></tr></thead>
+        <tbody>
+        {% for o in orders %}
+          <tr>
+            <td class="fw-semibold">#{{ o.id }}</td>
+            <td>{{ o.full_name }}</td>
+            <td class="text-nowrap">{{ o.created_at.strftime('%b %d, %Y') }}</td>
+            <td class="text-nowrap">{{ o.formatted_total() }}</td>
+            <td>{{ o.payment_method }}</td>
+            <td><span class="status-pill">{{ o.status.replace('_', ' ') }}</span></td>
+            <td class="actions-cell"><a href="{{ url_for('admin.order_detail', order_id=o.id) }}" class="btn btn-sm btn-outline-success">View</a></td>
+          </tr>
+        {% else %}
+          <tr><td colspan="7" class="empty-table-state">No orders match the selected filter.</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}
