@@ -39,9 +39,13 @@
           <img src="{{ profile.qr_image_url }}" alt="Current seller payment QR code" class="qr-preview-image">
           <div class="d-flex flex-wrap gap-2 mt-3">
             <a href="{{ profile.qr_image_url }}" target="_blank" rel="noopener" class="btn btn-sm btn-outline-success">Open QR</a>
-            <form method="POST" action="{{ url_for('admin.delete_qr') }}" class="d-inline">
-              <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Remove the current payment QR? Buyers will no longer see it for online payment until a new QR is uploaded.')">Delete Current QR</button>
-            </form>
+            <button
+              type="submit"
+              formaction="{{ url_for('admin.delete_qr') }}"
+              formmethod="post"
+              class="btn btn-sm btn-outline-danger"
+              onclick="return confirm('Remove the current payment QR? Buyers will no longer see it for online payment until a new QR is uploaded.')"
+            >Delete Current QR</button>
           </div>
         </div>
       {% else %}
