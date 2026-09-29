@@ -1270,3 +1270,48 @@ h1, h2, h3, h4, h5, h6, p, a, button, .card, .benefit-card, .ingredient-card {
   .chat-send-btn { min-width: 76px; }
   .chat-management-table { min-width: 760px; }
 }
+
+/* Admin chat table layout: keep the action controls on one line. */
+.chat-management-table {
+  min-width: 1060px;
+  table-layout: auto;
+}
+.chat-management-table th:last-child,
+.chat-management-table td:last-child {
+  width: 360px;
+  min-width: 360px;
+}
+.chat-management-table td:last-child > .d-flex {
+  flex-wrap: nowrap !important;
+  align-items: center;
+  justify-content: flex-end;
+  gap: .45rem !important;
+}
+.chat-management-table td:last-child form {
+  flex: 0 0 auto;
+  margin: 0;
+}
+.chat-management-table td:last-child .btn,
+.chat-management-table td:last-child select {
+  white-space: nowrap !important;
+  word-break: keep-all;
+}
+.chat-management-table td:last-child .chat-status-select {
+  width: 124px;
+  min-width: 124px;
+}
+.chat-management-table td:last-child form.d-flex {
+  align-items: center;
+  flex-wrap: nowrap !important;
+}
+.chat-management-table td:first-child,
+.chat-management-table td:nth-child(2),
+.chat-management-table td:nth-child(3) {
+  white-space: nowrap;
+}
+
+@media (max-width: 991.98px) {
+  .chat-management-table {
+    min-width: 1060px;
+  }
+}
