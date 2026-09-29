@@ -1,14 +1,17 @@
 {% extends "base.html" %}
 {% block title %}Chat — HairShellizer{% endblock %}
 {% block content %}
-<div class="container py-4" style="max-width:700px;">
-  <h2 class="mb-3">
-    {% if convo.conversation_type == 'ORDER' %}Order #{{ convo.order_id }} Chat{% else %}Inquiry Chat{% endif %}
-  </h2>
+<div class="container py-4 chat-page" style="max-width:700px;">
+  <div class="d-flex align-items-center justify-content-between gap-3 mb-3">
+    <h2 class="mb-0">{% if convo.conversation_type == 'ORDER' %}Order #{{ convo.order_id }} Chat{% else %}Inquiry Chat{% endif %}</h2>
+    {% if convo.status == 'PENDING' or convo.status == 'ACTIVE' %}<span class="badge bg-warning text-dark">Pending</span>{% elif convo.status == 'DELIVERED' %}<span class="badge bg-info text-dark">Delivered</span>{% elif convo.status == 'COMPLETE' %}<span class="badge bg-success">Complete</span>{% else %}<span class="badge bg-secondary">Inactive</span>{% endif %}
+  </div>
 
-  <div id="chat-expired-banner" class="alert alert-secondary {% if convo.status == 'ACTIVE' %}d-none{% endif %}">
-    {% if convo.conversation_type == 'INQUIRY' %}
-      Your inquiry has expired. <form method="POST" action="{{ url_for('chat.start_inquiry') }}" class="d-inline"><button class="btn btn-sm btn-outline-success">Start a New Inquiry</button></form>
+  <div id="chat-expired-banner" class="alert alert-secondary {% if convo.status in ['ACTIVE', 'PENDING', 'DELIVERED'] %}d-none{% endif %}">
+    {% if convo.status == 'INACTIVE' and convo.conversation_type == 'INQUIRY' %}
+      This inquiry is inactive. <form method="POST" action="{{ url_for('chat.start_inquiry') }}" class="d-inline"><button class="btn btn-sm btn-outline-success">Start a New Inquiry</button></form>
+    {% elif convo.conversation_type == 'INQUIRY' %}
+      This inquiry is closed. <form method="POST" action="{{ url_for('chat.start_inquiry') }}" class="d-inline"><button class="btn btn-sm btn-outline-success">Start a New Inquiry</button></form>
     {% else %}
       This conversation is closed.
     {% endif %}
@@ -16,9 +19,9 @@
 
   <div id="chat-messages" data-conversation-id="{{ convo.id }}" class="border rounded p-3 mb-3" style="height:400px; overflow-y:auto; background:#fafafa;"></div>
 
-  <form id="chat-send-form" method="POST" action="{{ url_for('chat.send_message', conversation_id=convo.id) }}" class="d-flex gap-2 {% if convo.status != 'ACTIVE' %}d-none{% endif %}">
-    <input type="text" name="message" class="form-control" placeholder="Type your message..." required>
-    <button type="submit" class="btn btn-success">Send</button>
+  <form id="chat-send-form" method="POST" action="{{ url_for('chat.send_message', conversation_id=convo.id) }}" class="d-flex gap-2 {% if convo.status not in ['ACTIVE', 'PENDING', 'DELIVERED'] %}d-none{% endif %}">
+    <input type="text" name="message" class="form-control chat-message-input" placeholder="Type your message..." required>
+    <button type="submit" class="btn btn-success chat-send-btn">Send</button>
   </form>
 </div>
 {% endblock %}

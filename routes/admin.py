@@ -41,14 +41,15 @@ def dashboard():
     low_stock = Product.query.filter(Product.stock <= 5, Product.is_active.is_(True)).count()
     total_customers = User.query.filter_by(role="customer").count()
     pending_payments = Payment.query.filter_by(payment_status="PENDING_VERIFICATION").count()
-    active_inquiries = Conversation.query.filter_by(conversation_type="INQUIRY", status="ACTIVE").count()
+    active_inquiries = Conversation.query.filter(Conversation.conversation_type == "INQUIRY", Conversation.status.in_(["ACTIVE", "PENDING", "DELIVERED"])).count()
+    inquiry_chats = Conversation.query.filter_by(conversation_type="INQUIRY").count()
     order_chats = Conversation.query.filter_by(conversation_type="ORDER").count()
 
     return render_template(
         "admin/dashboard.html",
         total_orders=total_orders, pending_orders=pending_orders, total_sales=total_sales,
         total_products=total_products, low_stock=low_stock, total_customers=total_customers,
-        pending_payments=pending_payments, active_inquiries=active_inquiries, order_chats=order_chats,
+        pending_payments=pending_payments, active_inquiries=active_inquiries, inquiry_chats=inquiry_chats, order_chats=order_chats,
     )
 
 
@@ -416,7 +417,40 @@ def chats():
         c.refresh_expiration()
     inquiries = [c for c in convos if c.conversation_type == "INQUIRY"]
     order_chats = [c for c in convos if c.conversation_type == "ORDER"]
-    return render_template("admin/chats.html", inquiries=inquiries, order_chats=order_chats)
+    return render_template(
+        "admin/chats.html",
+        inquiries=inquiries,
+        order_chats=order_chats,
+        inquiry_count=len(inquiries),
+        order_chat_count=len(order_chats),
+    )
+
+
+CHAT_MANAGEMENT_STATUSES = {"PENDING", "DELIVERED", "COMPLETE", "INACTIVE"}
+
+
+@admin_bp.route("/chats/<int:conversation_id>/status", methods=["POST"])
+def update_chat_status(conversation_id):
+    convo = Conversation.query.get_or_404(conversation_id)
+    new_status = request.form.get("status", "").strip().upper()
+
+    if new_status not in CHAT_MANAGEMENT_STATUSES:
+        flash("Invalid chat status.", "danger")
+        return redirect(url_for("admin.chats"))
+
+    convo.status = new_status
+    db.session.commit()
+    flash(f"Chat status updated to {new_status.title()}.", "success")
+    return redirect(url_for("admin.chats"))
+
+
+@admin_bp.route("/chats/<int:conversation_id>/delete", methods=["POST"])
+def delete_chat(conversation_id):
+    convo = Conversation.query.get_or_404(conversation_id)
+    db.session.delete(convo)
+    db.session.commit()
+    flash("Conversation deleted permanently.", "success")
+    return redirect(url_for("admin.chats"))
 
 
 # --------------------------------------------------------------------- #

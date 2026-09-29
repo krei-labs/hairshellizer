@@ -42,9 +42,9 @@
           {% if not current_user.is_admin %}
           <li class="nav-item"><a class="nav-link" href="{{ url_for('cart.view_cart') }}"><i class="bi bi-cart3"></i> Cart</a></li>
           <li class="nav-item"><a class="nav-link" href="{{ url_for('orders.my_orders') }}"><i class="bi bi-box-seam"></i> My Orders</a></li>
-          <li class="nav-item"><a class="nav-link" href="{{ url_for('chat.conversations') }}"><i class="bi bi-chat-dots"></i> Chats</a></li>
+          <li class="nav-item"><a class="nav-link nav-chat-link" href="{{ url_for('chat.conversations') }}"><i class="bi bi-chat-dots"></i><span>Chats</span></a></li>
           {% else %}
-          <li class="nav-item"><a class="nav-link" href="{{ url_for('admin.chats') }}"><i class="bi bi-chat-dots"></i> Chats</a></li>
+          <li class="nav-item"><a class="nav-link nav-chat-link" href="{{ url_for('admin.chats') }}"><i class="bi bi-chat-dots"></i><span>Chats</span></a></li>
           <li class="nav-item"><a class="nav-link fw-semibold text-success" href="{{ url_for('admin.dashboard') }}"><i class="bi bi-speedometer2"></i> Admin</a></li>
           {% endif %}
           <li class="nav-item dropdown">

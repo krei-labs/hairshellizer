@@ -1257,3 +1257,16 @@ h1, h2, h3, h4, h5, h6, p, a, button, .card, .benefit-card, .ingredient-card {
   .admin-filter-form { width: 100%; min-width: 0; }
   .admin-filter-form .form-select { width: 100%; }
 }
+
+
+/* Chat UI hardening: keep the Send button intact at narrow widths. */
+.chat-message-input { min-width: 0; }
+.chat-send-btn { flex: 0 0 auto !important; min-width: 78px; white-space: nowrap !important; }
+.chat-status-select { min-width: 112px; }
+.chat-management-table td, .chat-management-table th { vertical-align: middle; }
+.nav-chat-link { white-space: nowrap !important; }
+@media (max-width: 575.98px) {
+  .chat-page .d-flex.gap-2 { gap: .5rem !important; }
+  .chat-send-btn { min-width: 76px; }
+  .chat-management-table { min-width: 760px; }
+}

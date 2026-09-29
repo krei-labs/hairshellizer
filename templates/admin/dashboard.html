@@ -18,7 +18,7 @@
     <a href="{{ url_for('admin.categories') }}" class="btn btn-outline-success">Manage Categories</a>
     <a href="{{ url_for('admin.orders') }}" class="btn btn-outline-success">Manage Orders</a>
     <a href="{{ url_for('admin.payments') }}" class="btn btn-outline-success">Verify Payments</a>
-    <a href="{{ url_for('admin.chats') }}" class="btn btn-outline-success">View Chats ({{ order_chats }} order chats)</a>
+    <a href="{{ url_for('admin.chats') }}" class="btn btn-outline-success">View Chats ({{ order_chats }} order chats · {{ inquiry_chats }} inquiries)</a>
     <a href="{{ url_for('admin.customers') }}" class="btn btn-outline-success">Customers</a>
     <a href="{{ url_for('admin.settings') }}" class="btn btn-outline-success">Seller Settings</a>
     {% if current_user.is_main_admin %}<a href="{{ url_for('admin.staff') }}" class="btn btn-outline-success">Staff Accounts</a>{% endif %}

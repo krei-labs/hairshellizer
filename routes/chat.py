@@ -28,8 +28,9 @@ def conversations():
         .order_by(Conversation.last_message_at.desc()).all()
     for c in convos:
         c.refresh_expiration()
-    active = [c for c in convos if c.status == "ACTIVE"]
-    others = [c for c in convos if c.status != "ACTIVE"]
+    active_statuses = {"ACTIVE", "PENDING", "DELIVERED"}
+    active = [c for c in convos if c.status in active_statuses]
+    others = [c for c in convos if c.status not in active_statuses]
     return render_template("chat/conversations.html", active=active, others=others)
 
 
@@ -45,13 +46,13 @@ def start_inquiry():
 
     existing = Conversation.query.filter_by(
         customer_id=current_user.id, seller_id=seller_id,
-        conversation_type="INQUIRY", status="ACTIVE",
+        conversation_type="INQUIRY", status="PENDING",
     ).order_by(Conversation.created_at.desc()).first()
 
     if existing:
         existing.refresh_expiration()
 
-    if existing and existing.status == "ACTIVE":
+    if existing and existing.status in {"ACTIVE", "PENDING", "DELIVERED"}:
         convo = existing
     else:
         convo = Conversation.new_inquiry(current_user.id, seller_id)
@@ -81,8 +82,8 @@ def send_message(conversation_id):
     _authorize(convo)
     convo.refresh_expiration()
 
-    if convo.status != "ACTIVE":
-        flash("Your inquiry has expired. Please start a new one.", "warning")
+    if convo.status not in {"ACTIVE", "PENDING", "DELIVERED"}:
+        flash("This conversation is closed. Please start a new inquiry if you need help.", "warning")
         return redirect(url_for("chat.view_conversation", conversation_id=convo.id))
 
     text = request.form.get("message", "").strip()
