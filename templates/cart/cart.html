@@ -2,42 +2,85 @@
 {% block title %}Your Cart — HairShellizer{% endblock %}
 {% block content %}
 <div class="container py-4">
-  <h2 class="mb-4">Your Cart</h2>
+  <div class="d-flex flex-wrap justify-content-between align-items-end gap-2 mb-4">
+    <div><h2 class="mb-1">Your Cart</h2><p class="text-muted mb-0">Select the items you want to check out now.</p></div>
+  </div>
+
   {% if items %}
-  <div class="table-responsive">
-    <table class="table align-middle">
-      <thead><tr><th>Product</th><th>Price</th><th>Quantity</th><th>Subtotal</th><th></th></tr></thead>
-      <tbody>
-        {% for item in items %}
-        <tr>
-          <td class="d-flex align-items-center gap-2">
-            <img src="{{ item.product.image_url or 'https://placehold.co/60x60/f3ead9/4d6b38?text=HS' }}" width="50" height="50" style="object-fit:cover;border-radius:6px;" alt="{{ item.product.name }}">
-            {{ item.product.name }}
-          </td>
-          <td>{{ item.product.formatted_price() }}</td>
-          <td class="cart-quantity-cell">
-            <form method="POST" action="{{ url_for('cart.update_cart', item_id=item.id) }}" class="d-flex gap-1">
-              <input type="number" name="quantity" value="{{ item.quantity }}" min="0" max="{{ item.product.stock }}" class="form-control form-control-sm cart-quantity-input">
-              <button class="btn btn-sm btn-outline-success cart-update-btn" type="submit">Update</button>
-            </form>
-          </td>
-          <td>₱{{ '%.2f'|format(item.subtotal()) }}</td>
-          <td>
-            <form method="POST" action="{{ url_for('cart.remove_from_cart', item_id=item.id) }}">
-              <button class="btn btn-sm btn-outline-danger" type="submit"><i class="bi bi-trash"></i></button>
-            </form>
-          </td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
-  <div class="d-flex justify-content-end align-items-center gap-3 mt-3">
-    <h4>Total: ₱{{ '%.2f'|format(total) }}</h4>
-    <a href="{{ url_for('checkout.checkout') }}" class="btn btn-success btn-lg">Checkout</a>
-  </div>
+  
+    <div class="table-responsive">
+      <table class="table align-middle">
+        <thead><tr><th style="width:48px;"><input class="form-check-input" type="checkbox" id="selectAllCart" aria-label="Select all cart items"></th><th>Product</th><th>Price</th><th>Quantity</th><th>Subtotal</th><th></th></tr></thead>
+        <tbody>
+          {% for item in items %}
+          <tr>
+            <td><input class="form-check-input cart-item-checkbox" type="checkbox" name="selected_item_ids" value="{{ item.id }}" data-subtotal="{{ item.subtotal() }}" checked aria-label="Select {{ item.product.name }}"></td>
+            <td class="d-flex align-items-center gap-2">
+              <img src="{{ item.product.image_url or 'https://placehold.co/60x60/f3ead9/4d6b38?text=HS' }}" width="50" height="50" style="object-fit:cover;border-radius:6px;" alt="{{ item.product.name }}">
+              {{ item.product.name }}
+            </td>
+            <td>{{ item.product.formatted_price() }}</td>
+            <td class="cart-quantity-cell">
+              <form method="POST" action="{{ url_for('cart.update_cart', item_id=item.id) }}" class="d-flex gap-1" onsubmit="event.stopPropagation();">
+                <input type="number" name="quantity" value="{{ item.quantity }}" min="0" max="{{ item.product.stock }}" class="form-control form-control-sm cart-quantity-input">
+                <button class="btn btn-sm btn-outline-success cart-update-btn" type="submit">Update</button>
+              </form>
+            </td>
+            <td>₱{{ '%.2f'|format(item.subtotal()) }}</td>
+            <td>
+              <form method="POST" action="{{ url_for('cart.remove_from_cart', item_id=item.id) }}">
+                <button class="btn btn-sm btn-outline-danger" type="submit"><i class="bi bi-trash"></i></button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  <form method="GET" action="{{ url_for('checkout.checkout') }}" id="cartCheckoutForm" class="d-flex flex-wrap justify-content-end align-items-center gap-3 mt-3">
+      <div class="text-muted small" id="selectedCartCount">All cart items selected</div>
+      <h4 class="mb-0">Selected Total: ₱<span id="selectedCartTotal">{{ '%.2f'|format(total) }}</span></h4>
+      <button type="submit" class="btn btn-success btn-lg" id="checkoutSelectedBtn">Checkout Selected</button>
+  </form>
   {% else %}
   <p class="text-center text-muted py-5">Your cart is empty. <a href="{{ url_for('shop.products') }}">Continue Shopping</a></p>
   {% endif %}
 </div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+(function () {
+  const selectAll = document.getElementById('selectAllCart');
+  const boxes = Array.from(document.querySelectorAll('.cart-item-checkbox'));
+  const count = document.getElementById('selectedCartCount');
+  const checkout = document.getElementById('checkoutSelectedBtn');
+  const selectedTotal = document.getElementById('selectedCartTotal');
+  if (!selectAll || !boxes.length) return;
+
+  function refresh() {
+    const selectedBoxes = boxes.filter(b => b.checked);
+    const selected = selectedBoxes.length;
+    const subtotal = selectedBoxes.reduce((sum, box) => sum + Number(box.dataset.subtotal || 0), 0);
+    selectAll.checked = selected === boxes.length;
+    selectAll.indeterminate = selected > 0 && selected < boxes.length;
+    count.textContent = selected === boxes.length ? 'All cart items selected' : `${selected} item(s) selected`;
+    selectedTotal.textContent = subtotal.toFixed(2);
+    checkout.disabled = selected === 0;
+  }
+  selectAll.addEventListener('change', () => { boxes.forEach(b => b.checked = selectAll.checked); refresh(); });
+  boxes.forEach(b => b.addEventListener('change', refresh));
+  document.getElementById('cartCheckoutForm').addEventListener('submit', function (event) {
+    this.querySelectorAll('input[name=selected_item_ids]').forEach(el => el.remove());
+    const selected = boxes.filter(b => b.checked);
+    if (!selected.length) { event.preventDefault(); return; }
+    selected.forEach(box => {
+      const hidden = document.createElement('input');
+      hidden.type = 'hidden'; hidden.name = 'selected_item_ids'; hidden.value = box.value;
+      this.appendChild(hidden);
+    });
+  });
+  refresh();
+})();
+</script>
 {% endblock %}

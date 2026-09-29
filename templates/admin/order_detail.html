@@ -35,13 +35,13 @@
       <div class="card mb-3">
         <div class="card-body">
           <h5>Order Status</h5>
-          <form method="POST" action="{{ url_for('admin.order_update_status', order_id=order.id) }}" class="d-flex gap-2">
+          <form method="POST" action="{{ url_for('admin.order_update_status', order_id=order.id) }}" class="d-flex gap-2 order-status-form">
             <select name="status" class="form-select">
               {% for s in statuses %}
               <option value="{{ s }}" {% if order.status == s %}selected{% endif %}>{{ s }}</option>
               {% endfor %}
             </select>
-            <button class="btn btn-success" type="submit">Update</button>
+            <button class="btn btn-success text-nowrap flex-shrink-0" type="submit">Update</button>
           </form>
         </div>
       </div>
@@ -52,7 +52,12 @@
           <p class="mb-1">Method: {{ order.payment.payment_method }}</p>
           <p class="mb-1">Status: <span class="badge bg-secondary">{{ order.payment.payment_status }}</span></p>
           {% if order.payment.reference_number %}<p class="mb-1">Ref #: {{ order.payment.reference_number }}</p>{% endif %}
-          <a href="{{ url_for('admin.payments') }}" class="btn btn-sm btn-outline-success">Go to Payment Verification</a>
+          {% if order.payment.payment_method == 'ONLINE' and order.payment.payment_status == 'PENDING_VERIFICATION' %}
+          <form method="POST" action="{{ url_for('admin.payment_verify', payment_id=order.payment.id) }}" class="d-inline-block mt-2">
+            <button type="submit" class="btn btn-sm btn-success text-nowrap">Verify Payment → Mark PAID</button>
+          </form>
+          {% endif %}
+          <a href="{{ url_for('admin.payments') }}" class="btn btn-sm btn-outline-success mt-2">Go to Payment Verification</a>
           {% else %}
           <p class="text-muted">No payment record.</p>
           {% endif %}
@@ -61,6 +66,9 @@
       {% if order.conversation %}
       <a href="{{ url_for('chat.view_conversation', conversation_id=order.conversation.id) }}" class="btn btn-outline-success w-100"><i class="bi bi-chat-dots"></i> Open Order Chat</a>
       {% endif %}
+      <form method="POST" action="{{ url_for('admin.order_delete', order_id=order.id) }}" class="mt-2" onsubmit="return confirm('Permanently delete Order #{{ order.id }}? This will remove its order/payment/chat records.');">
+        <button type="submit" class="btn btn-outline-danger w-100">Delete Order</button>
+      </form>
     </div>
   </div>
 </div>

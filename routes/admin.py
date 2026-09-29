@@ -41,15 +41,14 @@ def dashboard():
     low_stock = Product.query.filter(Product.stock <= 5, Product.is_active.is_(True)).count()
     total_customers = User.query.filter_by(role="customer").count()
     pending_payments = Payment.query.filter_by(payment_status="PENDING_VERIFICATION").count()
-    active_inquiries = Conversation.query.filter(Conversation.conversation_type == "INQUIRY", Conversation.status.in_(["ACTIVE", "PENDING", "DELIVERED"])).count()
-    inquiry_chats = Conversation.query.filter_by(conversation_type="INQUIRY").count()
+    active_inquiries = Conversation.query.filter_by(conversation_type="INQUIRY", status="ACTIVE").count()
     order_chats = Conversation.query.filter_by(conversation_type="ORDER").count()
 
     return render_template(
         "admin/dashboard.html",
         total_orders=total_orders, pending_orders=pending_orders, total_sales=total_sales,
         total_products=total_products, low_stock=low_stock, total_customers=total_customers,
-        pending_payments=pending_payments, active_inquiries=active_inquiries, inquiry_chats=inquiry_chats, order_chats=order_chats,
+        pending_payments=pending_payments, active_inquiries=active_inquiries, order_chats=order_chats,
     )
 
 
@@ -249,9 +248,59 @@ def order_update_status(order_id):
                     product.stock -= item.quantity
 
     order.status = new_status
+
+    # Cash payments are considered paid once the order is fulfilled.
+    # COD = Cash on Delivery, COP = Cash on Pickup.
+    # Online payments remain pending until a staff member explicitly verifies
+    # the submitted reference number.
+    cash_payment_completed = (
+        order.payment
+        and order.payment_method in {"COD", "COP"}
+        and new_status in {"DELIVERED", "COMPLETED"}
+    )
+
+    if cash_payment_completed:
+        order.payment.payment_status = "PAID"
+        order.payment.verified_by = current_user.id
+        order.payment.verified_at = datetime.utcnow()
+
     db.session.commit()
-    flash(f"Order #{order.id} status updated to {new_status}.", "success")
+    if cash_payment_completed:
+        flash(
+            f"Order #{order.id} status updated to {new_status}. "
+            f"{order.payment_method} payment is now PAID.",
+            "success",
+        )
+    else:
+        flash(f"Order #{order.id} status updated to {new_status}.", "success")
     return redirect(url_for("admin.order_detail", order_id=order.id))
+
+
+@admin_bp.route("/orders/<int:order_id>/delete", methods=["POST"])
+def order_delete(order_id):
+    """Permanently delete an order and its related payment/chat records.
+
+    Stock is restored when the order had not already been cancelled, because
+    checkout removes the ordered quantity from inventory.
+    """
+    order = Order.query.get_or_404(order_id)
+
+    if order.status != "CANCELLED":
+        for item in order.items:
+            if item.product_id:
+                product = Product.query.get(item.product_id)
+                if product:
+                    product.stock += item.quantity
+
+    # Conversation is not configured with a delete cascade from Order, so
+    # remove it explicitly before deleting the order. Its messages cascade.
+    if order.conversation:
+        db.session.delete(order.conversation)
+
+    db.session.delete(order)
+    db.session.commit()
+    flash(f"Order #{order_id} permanently deleted.", "info")
+    return redirect(url_for("admin.orders"))
 
 
 # --------------------------------------------------------------------- #
@@ -269,6 +318,9 @@ def payments():
 @admin_bp.route("/payments/<int:payment_id>/verify", methods=["POST"])
 def payment_verify(payment_id):
     payment = Payment.query.get_or_404(payment_id)
+    if payment.payment_method == "ONLINE" and not payment.reference_number:
+        flash(f"Order #{payment.order_id} cannot be verified because no online payment reference number was submitted.", "danger")
+        return redirect(url_for("admin.order_detail", order_id=payment.order_id))
     payment.payment_status = "PAID"
     payment.verified_by = current_user.id
     payment.verified_at = datetime.utcnow()
@@ -310,6 +362,29 @@ def customer_toggle_status(user_id):
     db.session.commit()
     state = "activated" if customer.is_active else "deactivated"
     flash(f"Customer account {state}.", "success" if customer.is_active else "info")
+    return redirect(url_for("admin.customers"))
+
+
+@admin_bp.route("/customers/<int:user_id>/delete", methods=["POST"])
+def customer_delete(user_id):
+    """Permanently delete a buyer and their buyer-owned records."""
+    customer = User.query.filter_by(id=user_id, role="customer").first_or_404()
+    customer_email = customer.email
+
+    # Delete conversations first because Conversation.customer_id and
+    # Message.conversation_id otherwise keep the customer referenced.
+    conversations = Conversation.query.filter_by(customer_id=customer.id).all()
+    for convo in conversations:
+        db.session.delete(convo)
+
+    # Orders own their order items and payments through cascade.
+    orders = Order.query.filter_by(customer_id=customer.id).all()
+    for order in orders:
+        db.session.delete(order)
+
+    db.session.delete(customer)
+    db.session.commit()
+    flash(f"Customer account '{customer_email}' permanently deleted.", "info")
     return redirect(url_for("admin.customers"))
 
 
@@ -417,40 +492,7 @@ def chats():
         c.refresh_expiration()
     inquiries = [c for c in convos if c.conversation_type == "INQUIRY"]
     order_chats = [c for c in convos if c.conversation_type == "ORDER"]
-    return render_template(
-        "admin/chats.html",
-        inquiries=inquiries,
-        order_chats=order_chats,
-        inquiry_count=len(inquiries),
-        order_chat_count=len(order_chats),
-    )
-
-
-CHAT_MANAGEMENT_STATUSES = {"PENDING", "DELIVERED", "COMPLETE", "INACTIVE"}
-
-
-@admin_bp.route("/chats/<int:conversation_id>/status", methods=["POST"])
-def update_chat_status(conversation_id):
-    convo = Conversation.query.get_or_404(conversation_id)
-    new_status = request.form.get("status", "").strip().upper()
-
-    if new_status not in CHAT_MANAGEMENT_STATUSES:
-        flash("Invalid chat status.", "danger")
-        return redirect(url_for("admin.chats"))
-
-    convo.status = new_status
-    db.session.commit()
-    flash(f"Chat status updated to {new_status.title()}.", "success")
-    return redirect(url_for("admin.chats"))
-
-
-@admin_bp.route("/chats/<int:conversation_id>/delete", methods=["POST"])
-def delete_chat(conversation_id):
-    convo = Conversation.query.get_or_404(conversation_id)
-    db.session.delete(convo)
-    db.session.commit()
-    flash("Conversation deleted permanently.", "success")
-    return redirect(url_for("admin.chats"))
+    return render_template("admin/chats.html", inquiries=inquiries, order_chats=order_chats)
 
 
 # --------------------------------------------------------------------- #

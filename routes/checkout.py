@@ -21,9 +21,20 @@ def _get_seller_id():
 @checkout_bp.route("/", methods=["GET", "POST"])
 @login_required
 def checkout():
-    items = CartItem.query.filter_by(user_id=current_user.id).all()
-    if not items:
+    all_items = CartItem.query.filter_by(user_id=current_user.id).all()
+    raw_selected = request.args.getlist("selected_item_ids") if request.method == "GET" else request.form.getlist("selected_item_ids")
+    selected_ids = {int(value) for value in raw_selected if str(value).isdigit()}
+
+    if not all_items:
         flash("Your cart is empty.", "warning")
+        return redirect(url_for("cart.view_cart"))
+
+    # If no selection was supplied, preserve the old behavior for direct checkout
+    # links: all current cart items are selected. The cart page explicitly sends
+    # selected_item_ids so buyers can check out only chosen items.
+    items = [item for item in all_items if item.id in selected_ids] if selected_ids else all_items
+    if not items:
+        flash("Please select at least one cart item to check out.", "warning")
         return redirect(url_for("cart.view_cart"))
 
     # Validate availability and stock for every line before doing anything else.
@@ -54,23 +65,23 @@ def checkout():
 
         if not full_name or not email or not phone:
             flash("Please fill in your full name, email and phone number.", "danger")
-            return render_template("checkout/checkout.html", items=items, total=total, seller=seller)
+            return render_template("checkout/checkout.html", items=items, total=total, seller=seller, selected_item_ids=[item.id for item in items])
 
         if fulfillment_type == "delivery" and not address:
             flash("Please provide a delivery address.", "danger")
-            return render_template("checkout/checkout.html", items=items, total=total, seller=seller)
+            return render_template("checkout/checkout.html", items=items, total=total, seller=seller, selected_item_ids=[item.id for item in items])
 
         if payment_method not in ("COD", "COP", "ONLINE"):
             flash("Please choose a valid payment method.", "danger")
-            return render_template("checkout/checkout.html", items=items, total=total, seller=seller)
+            return render_template("checkout/checkout.html", items=items, total=total, seller=seller, selected_item_ids=[item.id for item in items])
 
         if payment_method == "ONLINE":
             if not seller or not seller.qr_image_url:
                 flash("Online payment is currently unavailable because the seller has not configured a payment QR. Please choose another payment method or contact the seller.", "danger")
-                return render_template("checkout/checkout.html", items=items, total=total, seller=seller)
+                return render_template("checkout/checkout.html", items=items, total=total, seller=seller, selected_item_ids=[item.id for item in items])
             if not reference_number:
                 flash("Please enter your transaction/reference number.", "danger")
-                return render_template("checkout/checkout.html", items=items, total=total, seller=seller)
+                return render_template("checkout/checkout.html", items=items, total=total, seller=seller, selected_item_ids=[item.id for item in items])
 
         seller_id = _get_seller_id()
         if not seller_id:
@@ -139,4 +150,4 @@ def checkout():
         flash("Your order has been placed! You can track it and chat with the seller from My Orders.", "success")
         return redirect(url_for("orders.order_detail", order_id=order.id))
 
-    return render_template("checkout/checkout.html", items=items, total=total, seller=seller)
+    return render_template("checkout/checkout.html", items=items, total=total, seller=seller, selected_item_ids=[item.id for item in items])

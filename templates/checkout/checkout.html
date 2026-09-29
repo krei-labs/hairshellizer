@@ -6,6 +6,7 @@
   <div class="row g-4">
     <div class="col-lg-7">
       <form method="POST" id="checkout-form">
+    {% for item_id in selected_item_ids %}<input type="hidden" name="selected_item_ids" value="{{ item_id }}">{% endfor %}
         <h5>Your Information</h5>
         <div class="row g-2 mb-3">
           <div class="col-md-6">

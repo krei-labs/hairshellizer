@@ -1259,59 +1259,43 @@ h1, h2, h3, h4, h5, h6, p, a, button, .card, .benefit-card, .ingredient-card {
 }
 
 
-/* Chat UI hardening: keep the Send button intact at narrow widths. */
-.chat-message-input { min-width: 0; }
-.chat-send-btn { flex: 0 0 auto !important; min-width: 78px; white-space: nowrap !important; }
-.chat-status-select { min-width: 112px; }
-.chat-management-table td, .chat-management-table th { vertical-align: middle; }
-.nav-chat-link { white-space: nowrap !important; }
-@media (max-width: 575.98px) {
-  .chat-page .d-flex.gap-2 { gap: .5rem !important; }
-  .chat-send-btn { min-width: 76px; }
-  .chat-management-table { min-width: 760px; }
-}
-
-/* Admin chat table layout: keep the action controls on one line. */
-.chat-management-table {
-  min-width: 1060px;
+/* Admin table and action controls: prevent buttons/text from wrapping or being clipped. */
+.admin-table {
+  width: 100%;
+  min-width: 0;
   table-layout: auto;
 }
-.chat-management-table th:last-child,
-.chat-management-table td:last-child {
-  width: 360px;
-  min-width: 360px;
+.admin-table th,
+.admin-table td {
+  overflow-wrap: anywhere;
 }
-.chat-management-table td:last-child > .d-flex {
-  flex-wrap: nowrap !important;
-  align-items: center;
-  justify-content: flex-end;
-  gap: .45rem !important;
-}
-.chat-management-table td:last-child form {
-  flex: 0 0 auto;
-  margin: 0;
-}
-.chat-management-table td:last-child .btn,
-.chat-management-table td:last-child select {
-  white-space: nowrap !important;
-  word-break: keep-all;
-}
-.chat-management-table td:last-child .chat-status-select {
-  width: 124px;
-  min-width: 124px;
-}
-.chat-management-table td:last-child form.d-flex {
-  align-items: center;
-  flex-wrap: nowrap !important;
-}
-.chat-management-table td:first-child,
-.chat-management-table td:nth-child(2),
-.chat-management-table td:nth-child(3) {
+.admin-table thead th.actions-col,
+.admin-table td.actions-cell {
+  width: 1%;
+  min-width: 180px;
   white-space: nowrap;
 }
-
-@media (max-width: 991.98px) {
-  .chat-management-table {
-    min-width: 1060px;
-  }
+.admin-table td.actions-cell {
+  overflow: visible;
+  flex-wrap: nowrap;
 }
+.admin-table td.actions-cell .btn,
+.admin-table td.actions-cell button {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+.admin-category-table th:first-child { width: 24%; }
+.admin-category-table th:nth-child(2) { width: auto; }
+.admin-category-table th.actions-col { width: 150px; }
+.admin-category-table td.category-description {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.order-status-form .form-select {
+  min-width: 0;
+}
+.order-status-form .btn {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+.cart-item-checkbox, #selectAllCart { cursor: pointer; }

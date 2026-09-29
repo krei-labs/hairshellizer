@@ -25,7 +25,12 @@
             <td class="text-nowrap">{{ o.formatted_total() }}</td>
             <td>{{ o.payment_method }}</td>
             <td><span class="status-pill">{{ o.status.replace('_', ' ') }}</span></td>
-            <td class="actions-cell"><a href="{{ url_for('admin.order_detail', order_id=o.id) }}" class="btn btn-sm btn-outline-success">View</a></td>
+            <td class="actions-cell">
+              <a href="{{ url_for('admin.order_detail', order_id=o.id) }}" class="btn btn-sm btn-outline-success">View</a>
+              <form method="POST" action="{{ url_for('admin.order_delete', order_id=o.id) }}" onsubmit="return confirm('Permanently delete Order #{{ o.id }}? This will remove its order/payment/chat records.');">
+                <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+              </form>
+            </td>
           </tr>
         {% else %}
           <tr><td colspan="7" class="empty-table-state">No orders match the selected filter.</td></tr>
