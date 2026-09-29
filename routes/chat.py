@@ -13,10 +13,10 @@ def _get_seller_id():
 
 
 def _authorize(conversation):
+    # Main admin and moderators can review/respond to any seller conversation.
     if current_user.is_admin:
-        if conversation.seller_id != current_user.id:
-            abort(403)
-    elif conversation.customer_id != current_user.id:
+        return
+    if conversation.customer_id != current_user.id:
         abort(403)
 
 

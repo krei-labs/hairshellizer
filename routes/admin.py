@@ -1,7 +1,7 @@
 from datetime import datetime
 from decimal import Decimal
 
-from flask import Blueprint, render_template, redirect, url_for, request, flash
+from flask import Blueprint, render_template, redirect, url_for, request, flash, current_app
 from flask_login import login_required, current_user
 
 from extensions import db
@@ -9,7 +9,10 @@ from models import (
     Product, Category, Order, Payment, User, Conversation, Message,
     SellerProfile, ORDER_STATUSES,
 )
-from utils import admin_required, allowed_image, upload_to_imagekit
+from utils import (
+    admin_required, main_admin_required, allowed_image, upload_to_imagekit,
+    delete_from_imagekit,
+)
 
 admin_bp = Blueprint("admin", __name__)
 
@@ -109,7 +112,8 @@ def _save_product(product, categories):
             return render_template("admin/product_form.html", product=product, categories=categories)
 
     if product is None:
-        product = Product(seller_id=current_user.id)
+        seller_owner = User.query.filter_by(role="admin").order_by(User.id.asc()).first()
+        product = Product(seller_id=seller_owner.id if seller_owner else current_user.id)
         db.session.add(product)
 
     product.name = name
@@ -298,14 +302,116 @@ def customers():
     return render_template("admin/customers.html", customers=items)
 
 
+@admin_bp.route("/customers/<int:user_id>/toggle-status", methods=["POST"])
+def customer_toggle_status(user_id):
+    customer = User.query.filter_by(id=user_id, role="customer").first_or_404()
+    customer.is_active = not customer.is_active
+    db.session.commit()
+    state = "activated" if customer.is_active else "deactivated"
+    flash(f"Customer account {state}.", "success" if customer.is_active else "info")
+    return redirect(url_for("admin.customers"))
+
+
+# --------------------------------------------------------------------- #
+# Staff / moderators (main admin only)
+# --------------------------------------------------------------------- #
+
+@admin_bp.route("/staff")
+@main_admin_required
+def staff():
+    items = User.query.filter(User.role == "moderator").order_by(User.created_at.desc()).all()
+    return render_template("admin/staff.html", staff_members=items)
+
+
+@admin_bp.route("/staff/new", methods=["GET", "POST"])
+@main_admin_required
+def staff_new():
+    if request.method == "POST":
+        name = request.form.get("name", "").strip()
+        email = request.form.get("email", "").strip().lower()
+        phone = request.form.get("phone", "").strip()
+        address = request.form.get("address", "").strip()
+        password = request.form.get("password", "")
+        confirm = request.form.get("confirm_password", "")
+
+        if not name or not email or not password:
+            flash("Name, email and password are required.", "danger")
+        elif len(password) < 8:
+            flash("Password must be at least 8 characters.", "danger")
+        elif password != confirm:
+            flash("Passwords do not match.", "danger")
+        elif User.query.filter_by(email=email).first():
+            flash("An account with that email already exists.", "danger")
+        else:
+            member = User(
+                name=name, email=email, phone=phone, address=address,
+                role="moderator", is_active=True,
+            )
+            member.set_password(password)
+            db.session.add(member)
+            db.session.commit()
+            flash(f"Moderator account for {email} was created.", "success")
+            return redirect(url_for("admin.staff"))
+
+    return render_template("admin/staff_form.html", member=None)
+
+
+@admin_bp.route("/staff/<int:user_id>/edit", methods=["GET", "POST"])
+@main_admin_required
+def staff_edit(user_id):
+    member = User.query.filter_by(id=user_id, role="moderator").first_or_404()
+
+    if request.method == "POST":
+        name = request.form.get("name", "").strip()
+        email = request.form.get("email", "").strip().lower()
+        phone = request.form.get("phone", "").strip()
+        address = request.form.get("address", "").strip()
+        password = request.form.get("password", "")
+        confirm = request.form.get("confirm_password", "")
+
+        existing = User.query.filter(User.email == email, User.id != member.id).first()
+        if not name or not email:
+            flash("Name and email are required.", "danger")
+        elif existing:
+            flash("That email address is already in use.", "danger")
+        elif password and len(password) < 8:
+            flash("Password must be at least 8 characters.", "danger")
+        elif password and password != confirm:
+            flash("Passwords do not match.", "danger")
+        else:
+            member.name = name
+            member.email = email
+            member.phone = phone
+            member.address = address
+            if password:
+                member.set_password(password)
+            db.session.commit()
+            flash(f"Moderator account for {email} was updated.", "success")
+            return redirect(url_for("admin.staff"))
+
+    return render_template("admin/staff_form.html", member=member)
+
+
+@admin_bp.route("/staff/<int:user_id>/toggle-status", methods=["POST"])
+@main_admin_required
+def staff_toggle_status(user_id):
+    member = User.query.filter_by(id=user_id, role="moderator").first_or_404()
+    member.is_active = not member.is_active
+    db.session.commit()
+    state = "activated" if member.is_active else "deactivated"
+    flash(f"Moderator account {state}.", "success" if member.is_active else "info")
+    return redirect(url_for("admin.staff"))
+
+
 # --------------------------------------------------------------------- #
 # Chats
 # --------------------------------------------------------------------- #
 
 @admin_bp.route("/chats")
 def chats():
-    convos = Conversation.query.filter_by(seller_id=current_user.id) \
-        .order_by(Conversation.last_message_at.desc()).all()
+    # There is one seller/store account, so every staff member should see the
+    # same buyer conversations regardless of which staff account is logged in.
+    convos = Conversation.query.order_by(Conversation.last_message_at.desc()).all()
     for c in convos:
         c.refresh_expiration()
     inquiries = [c for c in convos if c.conversation_type == "INQUIRY"]
@@ -319,9 +425,13 @@ def chats():
 
 @admin_bp.route("/settings", methods=["GET", "POST"])
 def settings():
-    profile = SellerProfile.query.filter_by(user_id=current_user.id).first()
+    # There is one seller/store profile. Moderators can manage it, but it
+    # remains attached to the main admin rather than creating duplicates.
+    seller_owner = User.query.filter_by(role="admin").order_by(User.id.asc()).first()
+    owner_id = seller_owner.id if seller_owner else current_user.id
+    profile = SellerProfile.query.filter_by(user_id=owner_id).first()
     if not profile:
-        profile = SellerProfile(user_id=current_user.id)
+        profile = SellerProfile(user_id=owner_id)
         db.session.add(profile)
         db.session.commit()
 
@@ -335,19 +445,45 @@ def settings():
 
         qr_file = request.files.get("qr_image")
         if qr_file and qr_file.filename:
-            if allowed_image(qr_file.filename):
-                try:
-                    profile.qr_image_url = upload_to_imagekit(
-                        qr_file, folder="/hairshellizer/payment-qr/"
-                    )
-                except Exception as exc:
-                    flash(f"QR code upload failed: {exc}", "danger")
-                    return render_template("admin/settings.html", profile=profile)
-            else:
+            if not allowed_image(qr_file.filename):
                 flash("QR code must be a JPG, JPEG, PNG or WEBP image.", "danger")
                 return render_template("admin/settings.html", profile=profile)
 
-        db.session.commit()
+            old_qr_file_id = profile.qr_image_file_id
+            new_qr = None
+            try:
+                new_qr = upload_to_imagekit(
+                    qr_file,
+                    folder="/hairshellizer/payment-qr/",
+                    return_metadata=True,
+                )
+                profile.qr_image_url = new_qr["url"]
+                profile.qr_image_file_id = new_qr["file_id"]
+                db.session.commit()
+            except Exception as exc:
+                db.session.rollback()
+                if new_qr and new_qr.get("file_id"):
+                    try:
+                        delete_from_imagekit(new_qr["file_id"])
+                    except Exception:
+                        current_app.logger.exception("Failed to clean up a newly uploaded QR after DB failure.")
+                flash(f"QR code upload failed: {exc}", "danger")
+                return render_template("admin/settings.html", profile=profile)
+
+            if old_qr_file_id:
+                try:
+                    delete_from_imagekit(old_qr_file_id)
+                except Exception:
+                    current_app.logger.exception("Failed to delete the previous QR from ImageKit.")
+                    flash("The new QR was saved, but the previous ImageKit QR could not be deleted automatically.", "warning")
+
+        try:
+            db.session.commit()
+        except Exception as exc:
+            db.session.rollback()
+            flash(f"Seller settings could not be saved: {exc}", "danger")
+            return render_template("admin/settings.html", profile=profile)
+
         flash("Seller settings updated.", "success")
         return redirect(url_for("admin.settings"))
 
@@ -356,8 +492,11 @@ def settings():
 
 @admin_bp.route("/settings/qr/delete", methods=["POST"])
 def delete_qr():
-    """Remove the currently configured payment QR from the seller profile."""
-    profile = SellerProfile.query.filter_by(user_id=current_user.id).first()
+    """Remove the configured payment QR from the store and ImageKit when possible."""
+    seller_owner = User.query.filter_by(role="admin").order_by(User.id.asc()).first()
+    owner_id = seller_owner.id if seller_owner else current_user.id
+    profile = SellerProfile.query.filter_by(user_id=owner_id).first()
+
     if not profile:
         flash("Seller profile not found.", "danger")
         return redirect(url_for("admin.settings"))
@@ -366,11 +505,18 @@ def delete_qr():
         flash("There is no payment QR code to remove.", "info")
         return redirect(url_for("admin.settings"))
 
-    # The DB stores the public URL only, so clearing it removes the QR from
-    # the admin preview and buyer checkout. The remote ImageKit asset remains
-    # untouched because its fileId is not stored in this schema.
+    old_qr_file_id = profile.qr_image_file_id
     profile.qr_image_url = None
+    profile.qr_image_file_id = None
     db.session.commit()
+
+    if old_qr_file_id:
+        try:
+            delete_from_imagekit(old_qr_file_id)
+        except Exception:
+            current_app.logger.exception("Failed to delete the QR from ImageKit.")
+            flash("The QR was removed from the website, but its ImageKit file could not be deleted automatically.", "warning")
+            return redirect(url_for("admin.settings"))
+
     flash("Current payment QR code removed. You can upload a new one.", "success")
     return redirect(url_for("admin.settings"))
-

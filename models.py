@@ -30,7 +30,8 @@ class User(db.Model, UserMixin):
     password_hash = db.Column(db.String(255), nullable=False)
     phone = db.Column(db.String(30))
     address = db.Column(db.String(255))
-    role = db.Column(db.String(20), nullable=False, default="customer")  # customer | admin
+    role = db.Column(db.String(20), nullable=False, default="customer")  # customer | moderator | admin
+    is_active = db.Column(db.Boolean, nullable=False, default=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
@@ -46,10 +47,31 @@ class User(db.Model, UserMixin):
 
     @property
     def is_admin(self):
+        return self.role in {"admin", "moderator"}
+
+    @property
+    def is_main_admin(self):
         return self.role == "admin"
 
     def __repr__(self):
         return f"<User {self.email} ({self.role})>"
+
+
+class PasswordResetToken(db.Model):
+    __tablename__ = "password_reset_tokens"
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False, index=True)
+    token_hash = db.Column(db.String(64), unique=True, nullable=False, index=True)
+    expires_at = db.Column(db.DateTime, nullable=False)
+    used_at = db.Column(db.DateTime)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    user = db.relationship("User", backref=db.backref("password_reset_tokens", lazy=True, cascade="all, delete-orphan"))
+
+    @property
+    def is_valid(self):
+        return self.used_at is None and datetime.utcnow() < self.expires_at
 
 
 class SellerProfile(db.Model):
@@ -69,6 +91,7 @@ class SellerProfile(db.Model):
     email = db.Column(db.String(150), default="hairshellizer@gmail.com")
     facebook_url = db.Column(db.String(255), default="https://www.facebook.com/share/1c6k1wjVB4/?mibextid=wwXIfr")
     qr_image_url = db.Column(db.String(500))
+    qr_image_file_id = db.Column(db.String(255))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 

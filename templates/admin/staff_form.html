@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Edit Moderator' if member else 'Create Moderator' }} — Admin{% endblock %}
+{% block content %}
+<div class="container py-4" style="max-width:720px;">
+  <div class="mb-4">
+    <div class="section-eyebrow">Staff access</div>
+    <h2 class="mb-1">{{ 'Edit Moderator' if member else 'Create Moderator' }}</h2>
+    <p class="text-muted mb-0">Moderators can use the admin workspace but cannot create or manage staff accounts.</p>
+  </div>
+  <div class="card border-0 shadow-sm p-4">
+    <form method="POST">
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label class="form-label">Full Name</label>
+          <input type="text" name="name" class="form-control" value="{{ member.name if member else '' }}" required>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Email</label>
+          <input type="email" name="email" class="form-control" value="{{ member.email if member else '' }}" required>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Phone</label>
+          <input type="text" name="phone" class="form-control" value="{{ member.phone if member else '' }}">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Address</label>
+          <input type="text" name="address" class="form-control" value="{{ member.address if member else '' }}">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">{{ 'New Password (optional)' if member else 'Password' }}</label>
+          <input type="password" name="password" class="form-control" {{ '' if member else 'required' }} minlength="8" autocomplete="new-password">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Confirm Password</label>
+          <input type="password" name="confirm_password" class="form-control" {{ '' if member else 'required' }} minlength="8" autocomplete="new-password">
+        </div>
+      </div>
+      <div class="alert alert-info mt-4 mb-4 small">
+        <i class="bi bi-shield-check"></i> Role: <strong>Moderator / Sub-admin</strong>. Only the main administrator can create or manage staff accounts.
+      </div>
+      <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-success">{{ 'Save Changes' if member else 'Create Moderator' }}</button>
+        <a href="{{ url_for('admin.staff') }}" class="btn btn-outline-secondary">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

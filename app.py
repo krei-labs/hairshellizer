@@ -24,6 +24,7 @@ def create_app(config_class=Config):
     from routes.orders import orders_bp
     from routes.chat import chat_bp
     from routes.admin import admin_bp
+    from routes.account import account_bp
     from routes.pages import pages_bp
 
     app.register_blueprint(pages_bp)
@@ -34,6 +35,7 @@ def create_app(config_class=Config):
     app.register_blueprint(orders_bp, url_prefix="/orders")
     app.register_blueprint(chat_bp, url_prefix="/chat")
     app.register_blueprint(admin_bp, url_prefix="/admin")
+    app.register_blueprint(account_bp, url_prefix="/account")
 
     # --- Login manager ----------------------------------------------------
     @login_manager.user_loader

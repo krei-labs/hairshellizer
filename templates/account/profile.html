@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}My Profile — HairShellizer{% endblock %}
+{% block content %}
+<div class="container py-5" style="max-width:760px;">
+  <div class="mb-4">
+    <div class="section-eyebrow">Account</div>
+    <h2 class="mb-1">My Profile</h2>
+    <p class="text-muted mb-0">Update your personal information and account details.</p>
+  </div>
+
+  <div class="card border-0 shadow-sm p-4">
+    <div class="d-flex align-items-center gap-3 mb-4">
+      <div class="rounded-circle bg-success-subtle text-success d-flex align-items-center justify-content-center" style="width:64px;height:64px;font-size:1.6rem;">
+        <i class="bi bi-person"></i>
+      </div>
+      <div>
+        <h5 class="mb-1">{{ current_user.name }}</h5>
+        <span class="badge text-bg-light border">{{ 'Main Admin' if current_user.is_main_admin else ('Moderator' if current_user.role == 'moderator' else 'Buyer') }}</span>
+      </div>
+    </div>
+
+    <form method="POST">
+      <div class="mb-3">
+        <label class="form-label">Full Name</label>
+        <input type="text" name="name" class="form-control" value="{{ current_user.name }}" required>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Email</label>
+        <input type="email" name="email" class="form-control" value="{{ current_user.email }}" required>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Phone</label>
+        <input type="text" name="phone" class="form-control" value="{{ current_user.phone or '' }}">
+      </div>
+      <div class="mb-4">
+        <label class="form-label">Address</label>
+        <textarea name="address" class="form-control" rows="3">{{ current_user.address or '' }}</textarea>
+      </div>
+      <div class="d-flex flex-wrap gap-2">
+        <button type="submit" class="btn btn-success">Save Changes</button>
+        <a href="{{ url_for('account.change_password') }}" class="btn btn-outline-secondary">Change Password</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

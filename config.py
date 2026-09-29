@@ -41,6 +41,12 @@ class Config:
     SELLER_EMAIL = os.environ.get("SELLER_EMAIL", "hairshellizer@gmail.com")
     SELLER_PHONE = os.environ.get("SELLER_PHONE", "+63 991 712 5341")
 
+    # Brevo transactional email (password reset, notifications, etc.)
+    APP_BASE_URL = os.environ.get("APP_BASE_URL", "")
+    BREVO_API_KEY = os.environ.get("BREVO_API_KEY", "")
+    BREVO_SENDER_EMAIL = os.environ.get("BREVO_SENDER_EMAIL", "")
+    BREVO_SENDER_NAME = os.environ.get("BREVO_SENDER_NAME", "HairShellizer")
+
     MAX_CONTENT_LENGTH = 5 * 1024 * 1024  # 5 MB max upload
     ALLOWED_IMAGE_EXTENSIONS = {"jpg", "jpeg", "png", "webp"}
 
