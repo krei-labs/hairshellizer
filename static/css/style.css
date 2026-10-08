@@ -1291,6 +1291,20 @@ h1, h2, h3, h4, h5, h6, p, a, button, .card, .benefit-card, .ingredient-card {
   white-space: normal;
   overflow-wrap: anywhere;
 }
+.chat-management-table {
+  min-width: 820px;
+}
+.chat-status-form {
+  flex: 0 0 auto;
+}
+.chat-status-select {
+  min-width: 120px;
+}
+.chat-status-save {
+  flex: 0 0 auto;
+  min-width: 3.5rem;
+  white-space: nowrap;
+}
 .order-status-form .form-select {
   min-width: 0;
 }

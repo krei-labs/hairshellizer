@@ -1,9 +1,34 @@
 import base64
 from functools import wraps
+from urllib.parse import urlparse
 
 import requests
-from flask import current_app, abort
+from flask import current_app, abort, request
 from flask_login import current_user
+
+
+def safe_redirect_target(target, fallback):
+    """Return `target` only if it is a same-site URL, otherwise `fallback`.
+
+    Used for ?next= and Referer redirects so an attacker cannot craft a link
+    that bounces a logged-in user to another website (open redirect).
+    """
+    if not target:
+        return fallback
+    target = target.strip()
+    # Browsers treat "\\" like "/", so "/\\evil.com" would escape the site.
+    if "\\" in target or any(ord(ch) < 32 for ch in target):
+        return fallback
+    parsed = urlparse(target)
+    if parsed.scheme or parsed.netloc:
+        same_site = (
+            parsed.scheme in ("http", "https")
+            and parsed.netloc == urlparse(request.host_url).netloc
+        )
+        return target if same_site else fallback
+    if not target.startswith("/") or target.startswith("//"):
+        return fallback
+    return target
 
 
 def staff_required(view_func):
@@ -36,7 +61,7 @@ def allowed_image(filename):
     return ext in current_app.config["ALLOWED_IMAGE_EXTENSIONS"]
 
 
-def upload_to_imagekit(file_storage, folder="/hairshellizer/products/", return_metadata=False):
+def upload_to_imagekit(file_storage, folder="/hairshellizer/products/", return_metadata: bool = False) -> str | dict[str, str]:
     """Upload a Werkzeug FileStorage to ImageKit.
 
     By default this preserves the existing behavior and returns only the URL.

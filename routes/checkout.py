@@ -3,9 +3,10 @@ from decimal import Decimal
 
 from flask import Blueprint, render_template, redirect, url_for, request, flash
 from flask_login import login_required, current_user
+from sqlalchemy.exc import SQLAlchemyError
 
 from extensions import db
-from models import CartItem, Order, OrderItem, Payment, Conversation, User, SellerProfile
+from models import CartItem, Order, OrderItem, Payment, Conversation, Product, User, SellerProfile
 
 checkout_bp = Blueprint("checkout", __name__)
 
@@ -67,6 +68,10 @@ def checkout():
             flash("Please fill in your full name, email and phone number.", "danger")
             return render_template("checkout/checkout.html", items=items, total=total, seller=seller, selected_item_ids=[item.id for item in items])
 
+        if fulfillment_type not in ("delivery", "pickup"):
+            flash("Please choose delivery or pickup.", "danger")
+            return render_template("checkout/checkout.html", items=items, total=total, seller=seller, selected_item_ids=[item.id for item in items])
+
         if fulfillment_type == "delivery" and not address:
             flash("Please provide a delivery address.", "danger")
             return render_template("checkout/checkout.html", items=items, total=total, seller=seller, selected_item_ids=[item.id for item in items])
@@ -100,52 +105,73 @@ def checkout():
 
         order_status = "READY_FOR_PICKUP" if (payment_method == "COP" and fulfillment_type == "pickup") else "PENDING"
 
-        order = Order(
-            customer_id=current_user.id,
-            seller_id=seller_id,
-            total_amount=total,
-            status=order_status,
-            payment_method=payment_method,
-            fulfillment_type=fulfillment_type,
-            shipping_address=address if fulfillment_type == "delivery" else None,
-            full_name=full_name,
-            phone=phone,
-            email=email,
-            notes=notes,
-        )
-        db.session.add(order)
-        db.session.flush()  # get order.id before commit
+        try:
+            # Reserve stock with one atomic UPDATE per line. The WHERE clause
+            # only matches while enough stock is left, so two buyers checking
+            # out at the same moment can never both take the last unit (the old
+            # read-then-subtract approach could oversell).
+            for item in items:
+                reserved = (
+                    Product.query
+                    .filter(
+                        Product.id == item.product_id,
+                        Product.is_active.is_(True),
+                        Product.stock >= item.quantity,
+                    )
+                    .update({Product.stock: Product.stock - item.quantity}, synchronize_session=False)
+                )
+                if not reserved:
+                    db.session.rollback()
+                    flash("One of the items just sold out or changed. Please review your cart.", "danger")
+                    return redirect(url_for("cart.view_cart"))
 
-        for item in items:
-            db.session.add(OrderItem(
+            order = Order(
+                customer_id=current_user.id,
+                seller_id=seller_id,
+                total_amount=total,
+                status=order_status,
+                payment_method=payment_method,
+                fulfillment_type=fulfillment_type,
+                shipping_address=address if fulfillment_type == "delivery" else None,
+                full_name=full_name,
+                phone=phone,
+                email=email,
+                notes=notes,
+            )
+            db.session.add(order)
+            db.session.flush()  # get order.id before commit
+
+            for item in items:
+                db.session.add(OrderItem(
+                    order_id=order.id,
+                    product_id=item.product_id,
+                    product_name_snapshot=item.product.name,
+                    price_snapshot=item.product.price,
+                    quantity=item.quantity,
+                    subtotal=item.subtotal(),
+                ))
+                db.session.delete(item)
+
+            payment_status = "PENDING_VERIFICATION" if payment_method == "ONLINE" else "UNPAID"
+            db.session.add(Payment(
                 order_id=order.id,
-                product_id=item.product.id,
-                product_name_snapshot=item.product.name,
-                price_snapshot=item.product.price,
-                quantity=item.quantity,
-                subtotal=item.subtotal(),
+                payment_method=payment_method,
+                payment_status=payment_status,
+                reference_number=reference_number or None,
+                amount=total,
+                payment_date=datetime.utcnow() if payment_method == "ONLINE" else None,
             ))
-            item.product.stock -= item.quantity
-            db.session.delete(item)
 
-        payment_status = "UNPAID"
-        if payment_method == "ONLINE":
-            payment_status = "PENDING_VERIFICATION"
+            # Every order gets its own permanent order conversation. It is part
+            # of the same transaction, so an order can never exist without its
+            # chat (before, a failure between two commits could leave one).
+            Conversation.new_order_conversation(current_user.id, seller_id, order.id, commit=False)
 
-        payment = Payment(
-            order_id=order.id,
-            payment_method=payment_method,
-            payment_status=payment_status,
-            reference_number=reference_number or None,
-            amount=total,
-            payment_date=datetime.utcnow() if payment_method == "ONLINE" else None,
-        )
-        db.session.add(payment)
-
-        db.session.commit()
-
-        # Every order gets its own permanent order conversation.
-        Conversation.new_order_conversation(current_user.id, seller_id, order.id)
+            db.session.commit()
+        except SQLAlchemyError:
+            db.session.rollback()
+            flash("We could not place your order. Nothing was charged - please try again.", "danger")
+            return redirect(url_for("cart.view_cart"))
 
         flash("Your order has been placed! You can track it and chat with the seller from My Orders.", "success")
         return redirect(url_for("orders.order_detail", order_id=order.id))

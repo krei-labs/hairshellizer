@@ -3,6 +3,7 @@ from flask_login import login_required, current_user
 
 from extensions import db
 from models import CartItem, Product
+from utils import safe_redirect_target
 
 cart_bp = Blueprint("cart", __name__)
 
@@ -26,16 +27,16 @@ def add_to_cart(product_id):
         flash("This product is not currently available.", "danger")
         return redirect(url_for("shop.products"))
 
+    if product.stock <= 0:
+        flash(f"{product.name} is out of stock.", "danger")
+        return redirect(url_for("shop.product_detail", product_id=product.id))
+
     item = CartItem.query.filter_by(user_id=current_user.id, product_id=product.id).first()
     desired_qty = (item.quantity if item else 0) + quantity
 
     if desired_qty > product.stock:
         flash(f"Only {product.stock} unit(s) of {product.name} left in stock.", "warning")
         desired_qty = product.stock
-
-    if desired_qty <= 0:
-        flash("Insufficient stock.", "danger")
-        return redirect(url_for("shop.product_detail", product_id=product.id))
 
     if item:
         item.quantity = desired_qty
@@ -45,14 +46,20 @@ def add_to_cart(product_id):
 
     db.session.commit()
     flash(f"{product.name} added to your cart.", "success")
-    return redirect(request.referrer or url_for("shop.products"))
+    return redirect(safe_redirect_target(request.referrer, url_for("shop.products")))
 
 
 @cart_bp.route("/update/<int:item_id>", methods=["POST"])
 @login_required
 def update_cart(item_id):
     item = CartItem.query.filter_by(id=item_id, user_id=current_user.id).first_or_404()
-    quantity = request.form.get("quantity", 1, type=int) or 1
+
+    # Do NOT write `type=int) or 1` here: that turns a typed 0 into 1, so the
+    # "set quantity to 0 to remove" input on the cart page never worked.
+    quantity = request.form.get("quantity", type=int)
+    if quantity is None:
+        flash("Please enter a valid quantity.", "warning")
+        return redirect(url_for("cart.view_cart"))
 
     if quantity <= 0:
         db.session.delete(item)
@@ -61,9 +68,17 @@ def update_cart(item_id):
         return redirect(url_for("cart.view_cart"))
 
     if not item.product.is_active:
+        name = item.product.name
         db.session.delete(item)
         db.session.commit()
-        flash(f"{item.product.name} is no longer available and was removed from your cart.", "warning")
+        flash(f"{name} is no longer available and was removed from your cart.", "warning")
+        return redirect(url_for("cart.view_cart"))
+
+    if item.product.stock <= 0:
+        name = item.product.name
+        db.session.delete(item)
+        db.session.commit()
+        flash(f"{name} is out of stock and was removed from your cart.", "warning")
         return redirect(url_for("cart.view_cart"))
 
     if quantity > item.product.stock:

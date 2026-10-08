@@ -1,5 +1,5 @@
-from datetime import datetime
-from decimal import Decimal
+from datetime import datetime, timedelta
+from decimal import Decimal, InvalidOperation
 
 from flask import Blueprint, render_template, redirect, url_for, request, flash, current_app
 from flask_login import login_required, current_user
@@ -7,7 +7,8 @@ from flask_login import login_required, current_user
 from extensions import db
 from models import (
     Product, Category, Order, Payment, User, Conversation, Message,
-    SellerProfile, ORDER_STATUSES,
+    SellerProfile, ORDER_STATUSES, CHAT_STATUSES, CHAT_OPEN_STATUSES,
+    CHAT_EXPIRING_STATUSES,
 )
 from utils import (
     admin_required, main_admin_required, allowed_image, upload_to_imagekit,
@@ -41,14 +42,20 @@ def dashboard():
     low_stock = Product.query.filter(Product.stock <= 5, Product.is_active.is_(True)).count()
     total_customers = User.query.filter_by(role="customer").count()
     pending_payments = Payment.query.filter_by(payment_status="PENDING_VERIFICATION").count()
-    active_inquiries = Conversation.query.filter_by(conversation_type="INQUIRY", status="ACTIVE").count()
+    Conversation.expire_stale_inquiries()
+    active_inquiries = Conversation.query.filter(
+        Conversation.conversation_type == "INQUIRY",
+        Conversation.status.in_(CHAT_OPEN_STATUSES),
+    ).count()
+    inquiry_chats = Conversation.query.filter_by(conversation_type="INQUIRY").count()
     order_chats = Conversation.query.filter_by(conversation_type="ORDER").count()
 
     return render_template(
         "admin/dashboard.html",
         total_orders=total_orders, pending_orders=pending_orders, total_sales=total_sales,
         total_products=total_products, low_stock=low_stock, total_customers=total_customers,
-        pending_payments=pending_payments, active_inquiries=active_inquiries, order_chats=order_chats,
+        pending_payments=pending_payments, active_inquiries=active_inquiries,
+        inquiry_chats=inquiry_chats, order_chats=order_chats,
     )
 
 
@@ -82,34 +89,48 @@ def product_edit(product_id):
 def _save_product(product, categories):
     name = request.form.get("name", "").strip()
     description = request.form.get("description", "").strip()
-    price = request.form.get("price", "0")
-    stock = request.form.get("stock", "0")
+    price_raw = request.form.get("price", "0").strip()
+    stock_raw = request.form.get("stock", "0").strip()
     category_id = request.form.get("category_id", type=int)
     is_featured = bool(request.form.get("is_featured"))
     is_active = bool(request.form.get("is_active"))
     image_file = request.files.get("image_file")
 
-    if not name:
-        flash("Product name is required.", "danger")
+    def _form_error(message):
+        flash(message, "danger")
         return render_template("admin/product_form.html", product=product, categories=categories)
+
+    if not name:
+        return _form_error("Product name is required.")
+    if len(name) > 150:
+        return _form_error("Product name must be 150 characters or fewer.")
 
     try:
-        price = Decimal(price)
-        stock = int(stock)
-    except Exception:
-        flash("Price and stock must be valid numbers.", "danger")
-        return render_template("admin/product_form.html", product=product, categories=categories)
+        price = Decimal(price_raw)
+        stock = int(stock_raw)
+    except (InvalidOperation, ValueError):
+        return _form_error("Price and stock must be valid numbers.")
 
-    image_url = product.image_url if product else None
+    # Decimal() happily accepts "NaN" and "Infinity"; both would crash the
+    # database insert and leave the session unusable.
+    if not price.is_finite() or price < 0 or price > Decimal("99999999.99"):
+        return _form_error("Price must be between 0 and 99,999,999.99.")
+    if stock < 0 or stock > 1_000_000:
+        return _form_error("Stock must be a whole number from 0 to 1,000,000.")
+    price = price.quantize(Decimal("0.01"))
+
+    if category_id is not None and db.session.get(Category, category_id) is None:
+        return _form_error("The selected category no longer exists.")
+
+    image_url: str | None = product.image_url if product else None
     if image_file and image_file.filename:
         if not allowed_image(image_file.filename):
-            flash("Only JPG, JPEG, PNG and WEBP images are allowed.", "danger")
-            return render_template("admin/product_form.html", product=product, categories=categories)
+            return _form_error("Only JPG, JPEG, PNG and WEBP images are allowed.")
         try:
-            image_url = upload_to_imagekit(image_file)
+            uploaded_url = upload_to_imagekit(image_file)
+            image_url = uploaded_url.get("url") if isinstance(uploaded_url, dict) else uploaded_url
         except Exception as exc:
-            flash(f"Image upload failed: {exc}", "danger")
-            return render_template("admin/product_form.html", product=product, categories=categories)
+            return _form_error(f"Image upload failed: {exc}")
 
     if product is None:
         seller_owner = User.query.filter_by(role="admin").order_by(User.id.asc()).first()
@@ -223,7 +244,7 @@ def order_update_status(order_id):
         # Restore inventory exactly once when an order is cancelled.
         for item in order.items:
             if item.product_id:
-                product = Product.query.get(item.product_id)
+                product = db.session.get(Product, item.product_id)
                 if product:
                     product.stock += item.quantity
 
@@ -233,7 +254,7 @@ def order_update_status(order_id):
         # available, otherwise the dashboard and shop inventory diverge.
         for item in order.items:
             if item.product_id:
-                product = Product.query.get(item.product_id)
+                product = db.session.get(Product, item.product_id)
                 if product and product.stock < item.quantity:
                     flash(
                         f"Cannot reopen Order #{order.id}: only {product.stock} unit(s) "
@@ -243,7 +264,7 @@ def order_update_status(order_id):
                     return redirect(url_for("admin.order_detail", order_id=order.id))
         for item in order.items:
             if item.product_id:
-                product = Product.query.get(item.product_id)
+                product = db.session.get(Product, item.product_id)
                 if product:
                     product.stock -= item.quantity
 
@@ -288,7 +309,7 @@ def order_delete(order_id):
     if order.status != "CANCELLED":
         for item in order.items:
             if item.product_id:
-                product = Product.query.get(item.product_id)
+                product = db.session.get(Product, item.product_id)
                 if product:
                     product.stock += item.quantity
 
@@ -318,6 +339,9 @@ def payments():
 @admin_bp.route("/payments/<int:payment_id>/verify", methods=["POST"])
 def payment_verify(payment_id):
     payment = Payment.query.get_or_404(payment_id)
+    if payment.payment_status != "PENDING_VERIFICATION":
+        flash(f"Order #{payment.order_id}'s payment is not awaiting verification.", "warning")
+        return redirect(url_for("admin.payments"))
     if payment.payment_method == "ONLINE" and not payment.reference_number:
         flash(f"Order #{payment.order_id} cannot be verified because no online payment reference number was submitted.", "danger")
         return redirect(url_for("admin.order_detail", order_id=payment.order_id))
@@ -332,6 +356,9 @@ def payment_verify(payment_id):
 @admin_bp.route("/payments/<int:payment_id>/reject", methods=["POST"])
 def payment_reject(payment_id):
     payment = Payment.query.get_or_404(payment_id)
+    if payment.payment_status != "PENDING_VERIFICATION":
+        flash(f"Order #{payment.order_id}'s payment is not awaiting verification.", "warning")
+        return redirect(url_for("admin.payments"))
     reason = request.form.get("rejection_reason", "").strip()
     if not reason:
         flash("Please provide a rejection reason.", "danger")
@@ -487,12 +514,53 @@ def staff_toggle_status(user_id):
 def chats():
     # There is one seller/store account, so every staff member should see the
     # same buyer conversations regardless of which staff account is logged in.
+    Conversation.expire_stale_inquiries()
     convos = Conversation.query.order_by(Conversation.last_message_at.desc()).all()
-    for c in convos:
-        c.refresh_expiration()
     inquiries = [c for c in convos if c.conversation_type == "INQUIRY"]
     order_chats = [c for c in convos if c.conversation_type == "ORDER"]
-    return render_template("admin/chats.html", inquiries=inquiries, order_chats=order_chats)
+    return render_template(
+        "admin/chats.html",
+        inquiries=inquiries, order_chats=order_chats,
+        inquiry_count=len(inquiries), order_chat_count=len(order_chats),
+    )
+
+
+@admin_bp.route("/chats/<int:conversation_id>/status", methods=["POST"])
+def update_chat_status(conversation_id):
+    """Set a conversation to Pending / Delivered / Complete / Inactive.
+    (templates/admin/chats.html posts here; this route was missing, which made
+    the whole Chats page crash with a BuildError.)"""
+    convo = db.get_or_404(Conversation, conversation_id)
+    new_status = request.form.get("status", "").strip().upper()
+    if new_status not in CHAT_STATUSES:
+        flash("Invalid chat status.", "danger")
+        return redirect(url_for("admin.chats"))
+
+    previous_status = convo.status
+    convo.status = new_status
+
+    # Re-opening an inquiry that had ended: give it a fresh time window,
+    # otherwise its old expires_at would flip it straight back to INACTIVE.
+    if (convo.conversation_type == "INQUIRY" and new_status == "PENDING"
+            and previous_status not in CHAT_EXPIRING_STATUSES):
+        hours = current_app.config.get("INQUIRY_EXPIRATION_HOURS", 24)
+        convo.expires_at = datetime.utcnow() + timedelta(hours=hours)
+
+    db.session.commit()
+    label = f"Order #{convo.order_id} chat" if convo.conversation_type == "ORDER" else "Inquiry"
+    flash(f"{label} marked as {new_status.title()}.", "success")
+    return redirect(url_for("admin.chats"))
+
+
+@admin_bp.route("/chats/<int:conversation_id>/delete", methods=["POST"])
+def delete_chat(conversation_id):
+    """Permanently delete a conversation and its messages (cascade)."""
+    convo = db.get_or_404(Conversation, conversation_id)
+    label = f"Order #{convo.order_id} chat" if convo.conversation_type == "ORDER" else "Inquiry"
+    db.session.delete(convo)
+    db.session.commit()
+    flash(f"{label} deleted.", "info")
+    return redirect(url_for("admin.chats"))
 
 
 # --------------------------------------------------------------------- #
@@ -526,13 +594,16 @@ def settings():
                 return render_template("admin/settings.html", profile=profile)
 
             old_qr_file_id = profile.qr_image_file_id
-            new_qr = None
+            new_qr: dict[str, str] | None = None
             try:
-                new_qr = upload_to_imagekit(
+                uploaded_qr = upload_to_imagekit(
                     qr_file,
                     folder="/hairshellizer/payment-qr/",
                     return_metadata=True,
                 )
+                if not isinstance(uploaded_qr, dict):
+                    raise TypeError("QR upload did not return metadata.")
+                new_qr = uploaded_qr
                 profile.qr_image_url = new_qr["url"]
                 profile.qr_image_file_id = new_qr["file_id"]
                 db.session.commit()

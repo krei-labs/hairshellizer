@@ -91,6 +91,10 @@ pip install -r requirements.txt
 
 Never commit `.env` — it is already listed in `.gitignore`.
 
+For local development without connecting to Neon, set `USE_SQLITE=true` in `.env`.
+The app will use a local `dev.db` file outside Vercel. `DATABASE_URL` remains the default
+when `USE_SQLITE` is unset or false; Vercel always uses `DATABASE_URL`.
+
 ## 10. Database Migration
 
 ```bash

@@ -7,7 +7,7 @@ from flask_login import login_user, logout_user, login_required, current_user
 
 from extensions import db
 from models import User, PasswordResetToken
-from utils import send_password_reset_email
+from utils import send_password_reset_email, safe_redirect_target
 
 auth_bp = Blueprint("auth", __name__)
 
@@ -58,10 +58,10 @@ def login():
         if user and user.is_active and user.check_password(password):
             login_user(user)
             flash(f"Welcome back, {user.name}!", "success")
-            next_page = request.args.get("next")
-            if user.is_admin:
-                return redirect(next_page or url_for("admin.dashboard"))
-            return redirect(next_page or url_for("pages.home"))
+            # Only follow same-site ?next= targets (blocks open redirects such
+            # as ?next=https://evil.example or ?next=//evil.example).
+            default_page = url_for("admin.dashboard") if user.is_admin else url_for("pages.home")
+            return redirect(safe_redirect_target(request.args.get("next"), default_page))
 
         if user and not user.is_active:
             flash("This account is currently deactivated. Please contact the store administrator.", "danger")

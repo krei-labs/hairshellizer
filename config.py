@@ -13,12 +13,28 @@ class Config:
     # Neon (and most managed Postgres providers) sometimes hand out URLs
     # that start with postgres:// . SQLAlchemy 1.4+ / psycopg2 need
     # postgresql:// instead, so we normalize it here.
-    _raw_db_url = os.environ.get("DATABASE_URL", "")
+    _raw_db_url = os.environ.get("DATABASE_URL", "").strip()
     if _raw_db_url.startswith("postgres://"):
         _raw_db_url = _raw_db_url.replace("postgres://", "postgresql://", 1)
-    SQLALCHEMY_DATABASE_URI = _raw_db_url or "sqlite:///dev.db"
+    _use_local_sqlite = (
+        os.environ.get("USE_SQLITE", "").strip().lower() in {"1", "true", "yes"}
+        and not os.environ.get("VERCEL")
+    )
+    SQLALCHEMY_DATABASE_URI = (
+        "sqlite:///dev.db" if _use_local_sqlite else _raw_db_url or "sqlite:///dev.db"
+    )
 
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+
+    # Session cookie hardening. "Secure" is only switched on when running on
+    # Vercel (HTTPS) so local http://localhost development still works.
+    _on_vercel = bool(os.environ.get("VERCEL"))
+    SESSION_COOKIE_HTTPONLY = True
+    SESSION_COOKIE_SAMESITE = "Lax"   # also blocks most cross-site form POSTs (CSRF)
+    SESSION_COOKIE_SECURE = _on_vercel
+    REMEMBER_COOKIE_HTTPONLY = True
+    REMEMBER_COOKIE_SAMESITE = "Lax"
+    REMEMBER_COOKIE_SECURE = _on_vercel
 
     # Serverless-friendly connection pooling: recycle connections often and
     # verify them before use so we don't hand out dead connections from a

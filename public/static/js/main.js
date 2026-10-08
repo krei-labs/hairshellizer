@@ -19,37 +19,62 @@ document.addEventListener("click", function (e) {
   const conversationId = chatBox.dataset.conversationId;
   const pollUrl = `/chat/${conversationId}/messages.json`;
 
-  function render(data) {
-    chatBox.innerHTML = "";
-    data.messages.forEach((m) => {
-      const div = document.createElement("div");
-      div.className = "chat-bubble " + (m.is_me ? "me" : "them");
-      div.innerHTML = `<div class="small fw-semibold">${m.is_me ? "You" : m.sender_name}</div>
-                        <div>${m.message.replace(/</g, "&lt;")}</div>
-                        <div class="small text-muted">${m.created_at}</div>`;
-      chatBox.appendChild(div);
-    });
-    chatBox.scrollTop = chatBox.scrollHeight;
+  // Statuses in which messages can still be sent. ACTIVE is the legacy name
+  // for PENDING. This list must match CHAT_OPEN_STATUSES in models.py; the old
+  // code only accepted "ACTIVE", so the send box vanished for Pending/Delivered.
+  const OPEN_STATUSES = ["ACTIVE", "PENDING", "DELIVERED"];
+  let lastSnapshot = "";
 
+  function buildBubble(m) {
+    // Use textContent (never innerHTML) so names and messages typed by users
+    // cannot inject HTML/JS into another user's browser.
+    const bubble = document.createElement("div");
+    bubble.className = "chat-bubble " + (m.is_me ? "me" : "them");
+
+    const who = document.createElement("div");
+    who.className = "small fw-semibold";
+    who.textContent = m.is_me ? "You" : m.sender_name;
+
+    const body = document.createElement("div");
+    body.textContent = m.message;
+
+    const when = document.createElement("div");
+    when.className = "small text-muted";
+    when.textContent = m.created_at;
+
+    bubble.append(who, body, when);
+    return bubble;
+  }
+
+  function render(data) {
+    const snapshot = JSON.stringify([data.status, data.messages]);
+    if (snapshot === lastSnapshot) return;   // nothing changed: don't redraw
+    lastSnapshot = snapshot;
+
+    // Only jump to the newest message if the reader was already at the bottom,
+    // so polling doesn't yank them away while they scroll through history.
+    const wasAtBottom = chatBox.scrollHeight - chatBox.scrollTop - chatBox.clientHeight < 40;
+    chatBox.replaceChildren(...data.messages.map(buildBubble));
+    if (wasAtBottom) chatBox.scrollTop = chatBox.scrollHeight;
+
+    const isOpen = OPEN_STATUSES.includes(data.status);
     const expiredBanner = document.getElementById("chat-expired-banner");
-    if (expiredBanner) {
-      expiredBanner.classList.toggle("d-none", data.status === "ACTIVE");
-    }
+    if (expiredBanner) expiredBanner.classList.toggle("d-none", isOpen);
     const form = document.getElementById("chat-send-form");
-    if (form) {
-      form.classList.toggle("d-none", data.status !== "ACTIVE");
-    }
+    if (form) form.classList.toggle("d-none", !isOpen);
   }
 
   function poll() {
-    fetch(pollUrl)
-      .then((res) => res.json())
+    if (document.hidden) return;             // don't hit the server from background tabs
+    fetch(pollUrl, { credentials: "same-origin" })
+      .then((res) => (res.ok ? res.json() : Promise.reject(res.status)))
       .then(render)
       .catch(() => {});
   }
 
   poll();
   setInterval(poll, 5000);
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) poll(); });
 })();
 
 // ---------------------------------------------------------------------
