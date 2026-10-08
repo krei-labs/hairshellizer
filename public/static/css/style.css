@@ -53,7 +53,7 @@ a:hover { color: var(--hs-green); }
 .btn-success:hover { background-color: var(--hs-green-dark); border-color: var(--hs-green-dark); }
 .btn-outline-success { color: var(--hs-green); border-color: var(--hs-green); }
 .btn-outline-success:hover { background-color: var(--hs-green); border-color: var(--hs-green); color: #fff; }
-.btn { border-radius: 8px; font-weight: 600; letter-spacing: .2px; }
+.btn { border-radius: 8px; font-weight: 600; letter-spacing: .2px; white-space: nowrap; }
 
 /* ---------- Hero ---------- */
 .hero-section {
@@ -1290,6 +1290,31 @@ h1, h2, h3, h4, h5, h6, p, a, button, .card, .benefit-card, .ingredient-card {
 .admin-category-table td.category-description {
   white-space: normal;
   overflow-wrap: anywhere;
+}
+.chat-management-table {
+  min-width: 820px;
+}
+.chat-status-form {
+  flex: 0 0 auto;
+}
+.chat-status-select {
+  min-width: 120px;
+}
+.chat-status-save {
+  flex: 0 0 auto;
+  min-width: 3.5rem;
+  white-space: nowrap;
+}
+#chat-send-form {
+  flex-wrap: nowrap;
+}
+.chat-message-input {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+.chat-send-btn {
+  flex: 0 0 auto;
+  min-width: 4.5rem;
 }
 .order-status-form .form-select {
   min-width: 0;
